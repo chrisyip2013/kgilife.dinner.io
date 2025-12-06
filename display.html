@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>凱基永續．共築願景 (大螢幕)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b1e36;
+            --glass-off: rgba(255, 255, 255, 0.15);
+            --kgi-blue: #0056b3;
+            --kgi-orange: #f39800;
+            --light-color: #7df9ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: "Microsoft JhengHei", sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .screen-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: radial-gradient(circle at center, #1b3a63 0%, #000000 90%);
+        }
+
+        .building-wrapper {
+            position: relative;
+            padding: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1); 
+        }
+
+        .building-grid {
+            display: grid;
+            gap: 2px;
+            margin: 0 auto;
+        }
+
+        .piece {
+            width: 25px;
+            height: 25px;
+            background-color: var(--glass-off);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 2px;
+        }
+
+        .spacer {
+            width: 25px;
+            height: 25px;
+            background-color: transparent;
+            pointer-events: none;
+        }
+
+        .piece.active {
+            background: linear-gradient(135deg, #fff 0%, var(--light-color) 50%, var(--kgi-blue) 100%);
+            box-shadow: 0 0 15px var(--light-color);
+            transform: scale(1.1);
+            z-index: 10;
+            border: 1px solid #fff;
+        }
+
+        .piece.active::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            opacity: 0;
+            animation: flash 0.4s ease-out;
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; transform: scale(1.5); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        .title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 0 0 20px var(--kgi-blue);
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+
+        .slogan {
+            margin-top: 30px;
+            font-size: 2rem;
+            background: linear-gradient(90deg, #fff, var(--kgi-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transition: opacity 2s;
+            font-weight: bold;
+        }
+
+        /* 連線狀態指示燈 (右上角) */
+        .status-light {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 5px; }
+        .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+
+        /* 彈幕 */
+        .marquee-container {
+            position: absolute;
+            bottom: 50px;
+            width: 90%;
+            height: 60px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .marquee-item {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 2px 2px 4px black;
+            font-weight: bold;
+            bottom: -60px;
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            animation: floatUp 5s linear forwards;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        @keyframes floatUp {
+            0% { bottom: -60px; opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; }
+            85% { opacity: 1; }
+            100% { bottom: 300px; opacity: 0; transform: translateX(40px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="screen-container">
+        <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線中...</span></div>
+        <div class="title">凱基永續．共築願景</div>
+        
+        <div class="building-wrapper">
+            <div class="building-grid" id="building"></div>
+        </div>
+
+        <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
+        <div class="marquee-container" id="marqueeArea"></div>
+    </div>
+
+    <script>
+        // === 1. 大樓設定 ===
+        const buildingMap = [
+            [0,0,1,0,0,0,0,0,0,0,1,0,0],
+            [0,0,1,1,0,0,0,0,0,1,1,0,0], 
+            [0,1,1,1,1,0,0,0,1,1,1,1,0],
+            [0,1,1,1,1,1,0,1,1,1,1,1,0],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [0,1,1,1,0,1,1,1,0,1,1,1,0]
+        ];
+
+        let totalPieces = 0;
+        let filledCount = 0;
+        const building = document.getElementById('building');
+        const pieces = [];
+
+        function initBuilding() {
+            building.innerHTML = '';
+            const cols = buildingMap[0].length;
+            building.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
+
+            buildingMap.forEach((row) => {
+                row.forEach((cell) => {
+                    const div = document.createElement('div');
+                    if (cell === 1) {
+                        div.classList.add('piece');
+                        pieces.push(div);
+                        building.appendChild(div);
+                        totalPieces++;
+                    } else {
+                        div.classList.add('spacer');
+                        building.appendChild(div);
+                    }
+                });
+            });
+        }
+
+        function getRandomEmptyIndex() {
+            const emptyIndices = pieces
+                .map((p, index) => p.classList.contains('active') ? -1 : index)
+                .filter(index => index !== -1);
+            if (emptyIndices.length === 0) return -1;
+            return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+        }
+
+        // 接收到訊息時觸發
+        function onMessageReceived(name, msg) {
+            if (filledCount >= totalPieces) return;
+
+            const targetIndex = getRandomEmptyIndex();
+            if (targetIndex !== -1) {
+                pieces[targetIndex].classList.add('active');
+                filledCount++;
+                showMarquee(`${name}：${msg}`);
+
+                if (filledCount === totalPieces) {
+                    setTimeout(() => {
+                        document.getElementById('finalSlogan').style.opacity = 1;
+                        triggerCompletionEffect();
+                    }, 500);
+                }
+            }
+        }
+
+        function showMarquee(text) {
+            const container = document.getElementById('marqueeArea');
+            const el = document.createElement('div');
+            el.classList.add('marquee-item');
+            el.innerText = text;
+            const colors = ['#fff', '#e0f7fa', '#fff3e0', '#ffecb3'];
+            el.style.color = colors[Math.floor(Math.random() * colors.length)];
+            el.style.left = Math.random() * 60 + '%';
+            container.appendChild(el);
+            setTimeout(() => { el.remove(); }, 6000);
+        }
+
+        function triggerCompletionEffect() {
+            pieces.forEach((p, i) => {
+                setTimeout(() => {
+                    p.style.transform = 'scale(1.2)';
+                    p.style.boxShadow = '0 0 30px white';
+                    setTimeout(() => {
+                        p.style.transform = 'scale(1.1)';
+                        p.style.boxShadow = '0 0 15px var(--light-color)';
+                    }, 300);
+                }, i * 5);
+            });
+        }
+
+        // === 2. MQTT 連線設定 (免後端黑科技) ===
+        // 使用公開 Broker: broker.emqx.io (Websocket Port: 8083)
+	const broker = "broker.emqx.io";
+        const port = 8084; // 改成 8084
+        // 請確認這個 topic 跟手機端一模一樣
+        const topic = "kgi_event_2025_live_demo"; 
+        const clientID = "monitor_" + new Date().getTime();
+
+        const client = new Paho.MQTT.Client(broker, port, clientID);
+
+        client.onConnectionLost = function (responseObject) {
+            document.getElementById('statusDot').classList.remove('online');
+            document.getElementById('statusText').innerText = "連線中斷，嘗試重連...";
+            console.log("Connection Lost: " + responseObject.errorMessage);
+            setTimeout(connectMQTT, 2000);
+        };
+
+        client.onMessageArrived = function (message) {
+            console.log("收到訊息:" + message.payloadString);
+            try {
+                const data = JSON.parse(message.payloadString);
+                onMessageReceived(data.name, data.msg);
+            } catch (e) {
+                console.error("JSON 解析錯誤");
+            }
+        };
+
+        function connectMQTT() {
+            client.connect({
+                useSSL: true, // 開啟加密連線
+                onSuccess: function () {
+                    console.log("MQTT 連線成功");
+                    document.getElementById('statusDot').classList.add('online');
+                    document.getElementById('statusText').innerText = "系統連線就緒";
+                    client.subscribe(topic);
+                },
+                onFailure: function (e) {
+                    console.log("連線失敗", e);
+                }
+            });
+        }
+
+        // 啟動
+        initBuilding();
+        connectMQTT();
+
+    </script>
+</body>
+</html>
