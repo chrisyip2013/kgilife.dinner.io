@@ -2,317 +2,205 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (大螢幕)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>傳遞祝福 - 凱基永續</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
             --bg-color: #0b1e36;
-            --glass-off: rgba(255, 255, 255, 0.15);
-            --kgi-blue: #0056b3;
             --kgi-orange: #f39800;
-            --light-color: #7df9ff;
+            --kgi-blue: #0056b3;
+            --text-color: #fff;
         }
 
         body {
             margin: 0;
-            padding: 0;
+            padding: 20px;
             background-color: var(--bg-color);
-            color: white;
+            color: var(--text-color);
             font-family: "Microsoft JhengHei", sans-serif;
             display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .screen-container {
-            width: 100%;
-            display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            background: radial-gradient(circle at center, #1b3a63 0%, #000000 90%);
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        .building-wrapper {
-            position: relative;
-            padding: 20px;
-            border-bottom: 2px solid rgba(255,255,255,0.1); 
-        }
-
-        .building-grid {
-            display: grid;
-            gap: 2px;
-            margin: 0 auto;
-        }
-
-        .piece {
-            width: 25px;
-            height: 25px;
-            background-color: var(--glass-off);
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 2px;
-        }
-
-        .spacer {
-            width: 25px;
-            height: 25px;
-            background-color: transparent;
-            pointer-events: none;
-        }
-
-        .piece.active {
-            background: linear-gradient(135deg, #fff 0%, var(--light-color) 50%, var(--kgi-blue) 100%);
-            box-shadow: 0 0 15px var(--light-color);
-            transform: scale(1.1);
-            z-index: 10;
-            border: 1px solid #fff;
-        }
-
-        .piece.active::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.9);
-            opacity: 0;
-            animation: flash 0.4s ease-out;
-        }
-
-        @keyframes flash {
-            0% { opacity: 1; transform: scale(1.5); }
-            100% { opacity: 0; transform: scale(1); }
-        }
-
-        .title {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: #fff;
-            text-shadow: 0 0 20px var(--kgi-blue);
-            letter-spacing: 5px;
-            font-weight: bold;
-        }
-
-        .slogan {
-            margin-top: 30px;
-            font-size: 2rem;
-            background: linear-gradient(90deg, #fff, var(--kgi-orange));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            opacity: 0;
-            transition: opacity 2s;
-            font-weight: bold;
-        }
-
-        /* 連線狀態指示燈 (右上角) */
-        .status-light {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 0.8rem;
-            color: #888;
-            display: flex;
-            align-items: center;
-        }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 5px; }
-        .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-
-        /* 彈幕 */
-        .marquee-container {
-            position: absolute;
-            bottom: 50px;
-            width: 90%;
-            height: 60px;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .marquee-item {
-            position: absolute;
-            white-space: nowrap;
+        h2 {
+            text-align: center;
+            color: var(--kgi-orange);
+            margin-bottom: 30px;
             font-size: 1.5rem;
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 2px 2px 4px black;
-            font-weight: bold;
-            bottom: -60px;
-            padding: 8px 15px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 10px;
-            animation: floatUp 5s linear forwards;
-            border: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
         }
 
-        @keyframes floatUp {
-            0% { bottom: -60px; opacity: 0; transform: translateX(0); }
-            10% { opacity: 1; }
-            85% { opacity: 1; }
-            100% { bottom: 300px; opacity: 0; transform: translateX(40px); }
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            background: #1e3a5f;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1.1rem; /* 放大字體方便手機輸入 */
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--kgi-orange);
+            background: #2a4b75;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            margin-top: 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, var(--kgi-orange), #ff6b00);
+            color: white;
+            box-shadow: 0 4px 15px rgba(243, 152, 0, 0.4);
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            box-shadow: none;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .success-msg {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            color: #00ff00;
         }
     </style>
 </head>
 <body>
 
-    <div class="screen-container">
-        <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線中...</span></div>
-        <div class="title">凱基永續．共築願景</div>
-        
-        <div class="building-wrapper">
-            <div class="building-grid" id="building"></div>
-        </div>
+    <h2>📱 傳遞願景祝福</h2>
 
-        <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
-        <div class="marquee-container" id="marqueeArea"></div>
+    <div class="input-group">
+        <label for="name">您的姓名 / 單位</label>
+        <input type="text" id="name" placeholder="例如：林專員 / 財務部">
     </div>
 
+    <div class="input-group">
+        <label for="msg">願景祝福 (30字內)</label>
+        <input type="text" id="msg" maxlength="30" placeholder="寫下對公司的期許...">
+    </div>
+
+    <button id="sendBtn" onclick="sendMessage()">✨ 發送祝福光點</button>
+
+    <div class="success-msg" id="successMsg">
+        發送成功！請看大螢幕 🎉
+    </div>
+
+    <div class="status" id="status">正在連線至祝福主機...</div>
+
     <script>
-        // === 1. 大樓設定 ===
-        const buildingMap = [
-            [0,0,1,0,0,0,0,0,0,0,1,0,0],
-            [0,0,1,1,0,0,0,0,0,1,1,0,0], 
-            [0,1,1,1,1,0,0,0,1,1,1,1,0],
-            [0,1,1,1,1,1,0,1,1,1,1,1,0],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [0,1,1,1,0,1,1,1,0,1,1,1,0]
-        ];
-
-        let totalPieces = 0;
-        let filledCount = 0;
-        const building = document.getElementById('building');
-        const pieces = [];
-
-        function initBuilding() {
-            building.innerHTML = '';
-            const cols = buildingMap[0].length;
-            building.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
-
-            buildingMap.forEach((row) => {
-                row.forEach((cell) => {
-                    const div = document.createElement('div');
-                    if (cell === 1) {
-                        div.classList.add('piece');
-                        pieces.push(div);
-                        building.appendChild(div);
-                        totalPieces++;
-                    } else {
-                        div.classList.add('spacer');
-                        building.appendChild(div);
-                    }
-                });
-            });
-        }
-
-        function getRandomEmptyIndex() {
-            const emptyIndices = pieces
-                .map((p, index) => p.classList.contains('active') ? -1 : index)
-                .filter(index => index !== -1);
-            if (emptyIndices.length === 0) return -1;
-            return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-        }
-
-        // 接收到訊息時觸發
-        function onMessageReceived(name, msg) {
-            if (filledCount >= totalPieces) return;
-
-            const targetIndex = getRandomEmptyIndex();
-            if (targetIndex !== -1) {
-                pieces[targetIndex].classList.add('active');
-                filledCount++;
-                showMarquee(`${name}：${msg}`);
-
-                if (filledCount === totalPieces) {
-                    setTimeout(() => {
-                        document.getElementById('finalSlogan').style.opacity = 1;
-                        triggerCompletionEffect();
-                    }, 500);
-                }
-            }
-        }
-
-        function showMarquee(text) {
-            const container = document.getElementById('marqueeArea');
-            const el = document.createElement('div');
-            el.classList.add('marquee-item');
-            el.innerText = text;
-            const colors = ['#fff', '#e0f7fa', '#fff3e0', '#ffecb3'];
-            el.style.color = colors[Math.floor(Math.random() * colors.length)];
-            el.style.left = Math.random() * 60 + '%';
-            container.appendChild(el);
-            setTimeout(() => { el.remove(); }, 6000);
-        }
-
-        function triggerCompletionEffect() {
-            pieces.forEach((p, i) => {
-                setTimeout(() => {
-                    p.style.transform = 'scale(1.2)';
-                    p.style.boxShadow = '0 0 30px white';
-                    setTimeout(() => {
-                        p.style.transform = 'scale(1.1)';
-                        p.style.boxShadow = '0 0 15px var(--light-color)';
-                    }, 300);
-                }, i * 5);
-            });
-        }
-
-        // === 2. MQTT 連線設定 (免後端黑科技) ===
-        // 使用公開 Broker: broker.emqx.io (Websocket Port: 8083)
+        // === MQTT 設定 (必須與大螢幕端完全一致) ===
         const broker = "broker.emqx.io";
         const port = 8083;
-        // 為了避免跟別的用戶撞名，建議修改這個 Topic，例如 "kgi2025_您的英文名"
-        const topic = "kgi_event_2025_live_demo"; 
-        const clientID = "monitor_" + new Date().getTime();
+        const topic = "kgi_event_2025_live_demo"; // 確保此名稱與 display.html 一模一樣
+        const clientID = "sender_" + new Date().getTime();
 
         const client = new Paho.MQTT.Client(broker, port, clientID);
+        let isConnected = false;
 
-        client.onConnectionLost = function (responseObject) {
-            document.getElementById('statusDot').classList.remove('online');
-            document.getElementById('statusText').innerText = "連線中斷，嘗試重連...";
-            console.log("Connection Lost: " + responseObject.errorMessage);
-            setTimeout(connectMQTT, 2000); // 2秒後重連
-        };
-
-        client.onMessageArrived = function (message) {
-            console.log("收到訊息:" + message.payloadString);
-            try {
-                const data = JSON.parse(message.payloadString);
-                onMessageReceived(data.name, data.msg);
-            } catch (e) {
-                console.error("JSON 解析錯誤");
+        // 連線
+        client.connect({
+            onSuccess: function () {
+                console.log("連線成功");
+                document.getElementById('status').innerText = "🟢 已連線，請輸入祝福";
+                isConnected = true;
+            },
+            onFailure: function (e) {
+                console.log("連線失敗", e);
+                document.getElementById('status').innerText = "🔴 連線失敗，請重新整理網頁";
             }
+        });
+
+        client.onConnectionLost = function() {
+            document.getElementById('status').innerText = "🔴 連線中斷，正在重連...";
+            isConnected = false;
         };
 
-        function connectMQTT() {
-            client.connect({
-                onSuccess: function () {
-                    console.log("MQTT 連線成功");
-                    document.getElementById('statusDot').classList.add('online');
-                    document.getElementById('statusText').innerText = "系統連線就緒";
-                    client.subscribe(topic); // 訂閱頻道
-                },
-                onFailure: function (e) {
-                    console.log("連線失敗", e);
-                }
-            });
+        function sendMessage() {
+            const name = document.getElementById('name').value.trim();
+            const msg = document.getElementById('msg').value.trim();
+            const btn = document.getElementById('sendBtn');
+
+            if (!isConnected) {
+                alert("尚未連線，請稍後再試！");
+                return;
+            }
+            if (!name || !msg) {
+                alert("請完整填寫姓名與祝福內容喔！");
+                return;
+            }
+
+            // 打包成 JSON
+            const payload = JSON.stringify({ name: name, msg: msg });
+            
+            try {
+                const message = new Paho.MQTT.Message(payload);
+                message.destinationName = topic;
+                client.send(message);
+
+                // UI 回饋
+                btn.disabled = true;
+                btn.innerText = "發送中...";
+                
+                setTimeout(() => {
+                    document.getElementById('successMsg').style.display = 'block';
+                    document.getElementById('name').value = '';
+                    document.getElementById('msg').value = '';
+                    
+                    btn.innerText = "✨ 再次發送";
+                    btn.disabled = false;
+
+                    // 3秒後隱藏成功訊息
+                    setTimeout(() => {
+                        document.getElementById('successMsg').style.display = 'none';
+                    }, 3000);
+                }, 500);
+
+            } catch (e) {
+                alert("發送失敗，請重試");
+                console.error(e);
+            }
         }
-
-        // 啟動
-        initBuilding();
-        connectMQTT();
-
     </script>
 </body>
 </html>
