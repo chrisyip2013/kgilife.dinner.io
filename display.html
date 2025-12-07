@@ -12,6 +12,8 @@
             --kgi-blue: #0056b3;
             --kgi-orange: #f39800;
             --light-color: #7df9ff;
+            /* 修改：格子尺寸放大，視覺更飽滿 */
+            --cell-size: 35px; 
         }
 
         body {
@@ -37,35 +39,35 @@
 
         .building-wrapper {
             position: relative;
-            padding: 20px;
+            padding: 30px;
             border-bottom: 2px solid rgba(255,255,255,0.1); 
         }
 
         .building-grid {
             display: grid;
-            gap: 2px;
+            gap: 4px; /* 間距稍微拉大一點 */
             margin: 0 auto;
         }
 
         .piece {
-            width: 25px;
-            height: 25px;
+            width: var(--cell-size);
+            height: var(--cell-size);
             background-color: var(--glass-off);
             border: 1px solid rgba(255,255,255,0.05);
             transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .spacer {
-            width: 25px;
-            height: 25px;
+            width: var(--cell-size);
+            height: var(--cell-size);
             background-color: transparent;
             pointer-events: none;
         }
 
         .piece.active {
             background: linear-gradient(135deg, #fff 0%, var(--light-color) 50%, var(--kgi-blue) 100%);
-            box-shadow: 0 0 15px var(--light-color);
+            box-shadow: 0 0 20px var(--light-color);
             transform: scale(1.1);
             z-index: 10;
             border: 1px solid #fff;
@@ -86,7 +88,7 @@
         }
 
         .title {
-            font-size: 3rem;
+            font-size: 3.5rem;
             margin-bottom: 20px;
             color: #fff;
             text-shadow: 0 0 20px var(--kgi-blue);
@@ -96,7 +98,7 @@
 
         .slogan {
             margin-top: 30px;
-            font-size: 2rem;
+            font-size: 2.2rem;
             background: linear-gradient(90deg, #fff, var(--kgi-orange));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -105,12 +107,11 @@
             font-weight: bold;
         }
 
-        /* 連線狀態指示燈 (右上角) */
         .status-light {
             position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: #888;
             display: flex;
             align-items: center;
@@ -118,12 +119,11 @@
         .dot { width: 10px; height: 10px; border-radius: 50%; background: red; margin-right: 5px; }
         .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
 
-        /* 彈幕 */
         .marquee-container {
             position: absolute;
             bottom: 50px;
             width: 90%;
-            height: 60px;
+            height: 70px;
             overflow: hidden;
             pointer-events: none;
         }
@@ -131,23 +131,23 @@
         .marquee-item {
             position: absolute;
             white-space: nowrap;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: rgba(255, 255, 255, 0.95);
             text-shadow: 2px 2px 4px black;
             font-weight: bold;
-            bottom: -60px;
-            padding: 8px 15px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 10px;
+            bottom: -70px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 15px;
             animation: floatUp 5s linear forwards;
             border: 1px solid rgba(255,255,255,0.2);
         }
 
         @keyframes floatUp {
-            0% { bottom: -60px; opacity: 0; transform: translateX(0); }
+            0% { bottom: -70px; opacity: 0; transform: translateX(0); }
             10% { opacity: 1; }
             85% { opacity: 1; }
-            100% { bottom: 300px; opacity: 0; transform: translateX(40px); }
+            100% { bottom: 350px; opacity: 0; transform: translateX(40px); }
         }
     </style>
 </head>
@@ -166,28 +166,20 @@
     </div>
 
     <script>
-        // === 1. 大樓設定 ===
+        // === 1. 大樓設定 (精確 90 格版本) ===
+        // 矩陣設計：寬10，總高10
+        // 4 + 6 + 80 = 90
         const buildingMap = [
-            [0,0,1,0,0,0,0,0,0,0,1,0,0],
-            [0,0,1,1,0,0,0,0,0,1,1,0,0], 
-            [0,1,1,1,1,0,0,0,1,1,1,1,0],
-            [0,1,1,1,1,1,0,1,1,1,1,1,0],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [0,1,1,1,0,1,1,1,0,1,1,1,0]
+            [1,1,0,0,0,0,0,0,1,1], // Row 1: 4格 (雙塔頂)
+            [1,1,1,0,0,0,0,1,1,1], // Row 2: 6格
+            [1,1,1,1,1,1,1,1,1,1], // Row 3: 10格 (主體開始)
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1]  // Row 10: 10格
         ];
 
         let totalPieces = 0;
@@ -198,7 +190,8 @@
         function initBuilding() {
             building.innerHTML = '';
             const cols = buildingMap[0].length;
-            building.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
+            // 使用 CSS 變數中的尺寸
+            building.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
 
             buildingMap.forEach((row) => {
                 row.forEach((cell) => {
@@ -214,6 +207,7 @@
                     }
                 });
             });
+            console.log("Total Pieces:", totalPieces); // 確認是否為 90
         }
 
         function getRandomEmptyIndex() {
@@ -224,7 +218,6 @@
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        // 接收到訊息時觸發
         function onMessageReceived(name, msg) {
             if (filledCount >= totalPieces) return;
 
@@ -262,18 +255,16 @@
                     p.style.boxShadow = '0 0 30px white';
                     setTimeout(() => {
                         p.style.transform = 'scale(1.1)';
-                        p.style.boxShadow = '0 0 15px var(--light-color)';
+                        p.style.boxShadow = '0 0 20px var(--light-color)';
                     }, 300);
-                }, i * 5);
+                }, i * 10); // 稍微放慢波浪速度
             });
         }
 
-        // === 2. MQTT 連線設定 (免後端黑科技) ===
-        // 使用公開 Broker: broker.emqx.io (Websocket Port: 8083)
-	const broker = "broker.emqx.io";
-        const port = 8084; // 改成 8084
-        // 請確認這個 topic 跟手機端一模一樣
-        const topic = "kgi_event_2025_live_demo"; 
+        // === 2. MQTT 連線設定 (修正版: Port 8084 + SSL) ===
+        const broker = "broker.emqx.io";
+        const port = 8084; 
+        const topic = "kgi_event_2025_live_demo"; // 請確認與 index.html 一致
         const clientID = "monitor_" + new Date().getTime();
 
         const client = new Paho.MQTT.Client(broker, port, clientID);
@@ -297,11 +288,11 @@
 
         function connectMQTT() {
             client.connect({
-                useSSL: true, // 開啟加密連線
+                useSSL: true, // 必開
                 onSuccess: function () {
                     console.log("MQTT 連線成功");
                     document.getElementById('statusDot').classList.add('online');
-                    document.getElementById('statusText').innerText = "系統連線就緒";
+                    document.getElementById('statusText').innerText = "系統連線就緒 (90格)";
                     client.subscribe(topic);
                 },
                 onFailure: function (e) {
