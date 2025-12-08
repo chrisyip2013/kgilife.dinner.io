@@ -3,242 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (大螢幕)</title>
+    <title>凱基永續．共築願景 (仰視炸裂版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
-            --bg-color: #0b1e36;
-            --glass-off: rgba(255, 255, 255, 0.12);
-            --kgi-blue: #0056b3;
-            --kgi-orange: #f39800;
-            --light-color: #7df9ff;
-            --sidebar-bg: #061220;
+            --bg-color: #000510;
+            --kgi-blue: #004a99;
+            --kgi-bright-blue: #0080ff;
+            --kgi-orange: #ff6600;
+            --neon-cyan: #00ffff;
+            --neon-white: #ffffff;
+            --sidebar-bg: rgba(3, 10, 20, 0.9);
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: var(--bg-color);
             color: white;
             font-family: "Microsoft JhengHei", sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            height: 100vh; overflow: hidden;
+            /* 移除這裡的 perspective，移到 main-display */
         }
 
-        /* === 版面配置容器 === */
+        /* === 全螢幕震動特效 Class === */
+        .screen-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 1px, 0); }
+            20%, 80% { transform: translate3d(3px, -2px, 0); }
+            30%, 50%, 70% { transform: translate3d(-5px, 3px, 0); }
+            40%, 60% { transform: translate3d(5px, -4px, 0); }
+        }
+
+        /* === 背景高速粒子 === */
+        #particles-js {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at bottom, #0c2441 0%, #000000 80%);
+            z-index: 1; overflow: hidden;
+        }
+        .warp-star {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            opacity: 0;
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: warpSpeed var(--duration) linear infinite;
+            animation-delay: var(--delay);
+        }
+        @keyframes warpSpeed {
+            0% { opacity: 0; transform: translateY(0) scale(0.5); }
+            10% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-100vh) scale(5); height: 50px; }
+        }
+
+        /* === 版面配置 === */
         .layout-wrapper {
-            display: flex;
-            width: 100%;
-            height: 100%;
+            display: flex; width: 100%; height: 100%;
+            position: relative; z-index: 10;
         }
 
-        /* === 左側：大樓展示區 === */
+        /* === 左側主顯示區 (修改重點：3D視角設定) === */
         .main-display {
-            flex: 3; /* 佔 3/4 空間 */
-            position: relative;
-            background: radial-gradient(circle at center, #1b3a63 0%, #000000 90%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; /* 確保彈幕不出界 */
+            flex: 3; position: relative;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background-image: 
+                linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%),
+                radial-gradient(transparent, black);
+            background-size: 10px 10px, 100% 100%;
+            /* [修改3] 設定強烈的 3D 透視感 */
+            perspective: 1200px;
+            perspective-origin: 50% 70%; /*視角設定在畫面中下方，製造仰視感*/
         }
-
-        /* === 右側：祝福紀錄區 === */
-        .sidebar {
-            flex: 1; /* 佔 1/4 空間 */
-            background-color: var(--sidebar-bg);
-            border-left: 2px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
-            z-index: 20; /* 確保在最上層 */
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            background: rgba(0, 86, 179, 0.2);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-        }
-
-        .sidebar-header h2 {
-            margin: 0;
-            color: var(--kgi-orange);
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-        }
-
-        .message-list {
-            flex: 1;
-            overflow-y: auto; /* 允許垂直捲動 */
-            padding: 20px;
-            scroll-behavior: smooth;
-        }
-
-        /* 隱藏捲軸美化 */
-        .message-list::-webkit-scrollbar { width: 6px; }
-        .message-list::-webkit-scrollbar-track { background: #0b1e36; }
-        .message-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-
-        /* 單則祝福卡片樣式 */
-        .msg-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--kgi-blue);
-            animation: slideIn 0.5s ease-out;
-            transition: all 0.3s;
-        }
-
-        .msg-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-
-        .msg-name {
-            color: var(--light-color);
-            font-size: 0.95rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .msg-time {
-            font-size: 0.8rem;
-            color: #666;
-            font-weight: normal;
-        }
-
-        .msg-content {
-            font-size: 1.1rem;
-            color: #fff;
-            line-height: 1.4;
-            word-break: break-all;
-        }
-
-        /* 卡片進場動畫 */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* === 原本的大樓與彈幕樣式 (維持不變) === */
-        .building-wrapper {
-            position: relative;
-            padding: 30px;
-            border-bottom: 2px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 20px 50px rgba(0, 86, 179, 0.1); 
-            z-index: 5;
-        }
-
-        .building-grid {
-            display: grid;
-            gap: 3px;
-            margin: 0 auto;
-        }
-
-        .piece {
-            width: 35px; height: 35px;
-            background-color: var(--glass-off);
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 3px;
-        }
-        .spacer { width: 35px; height: 35px; background: transparent; pointer-events: none; }
-        .piece.active {
-            background: linear-gradient(135deg, #fff 0%, var(--light-color) 40%, var(--kgi-blue) 100%);
-            box-shadow: 0 0 20px var(--light-color);
-            transform: scale(1.15); z-index: 10; border: 1px solid #fff;
-        }
-        .piece.active::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.95); opacity: 0; animation: flash 0.5s ease-out; border-radius: 3px;
-        }
-        @keyframes flash { 0% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0; transform: scale(1); } }
 
         .title {
-            font-size: 3rem; margin-bottom: 25px; color: #fff;
-            text-shadow: 0 0 25px var(--kgi-blue); letter-spacing: 8px; font-weight: bold; z-index: 5;
+            font-size: 4rem; margin-bottom: 30px; color: var(--neon-white);
+            text-shadow: 
+                0 0 10px var(--neon-cyan),
+                0 0 30px var(--kgi-bright-blue),
+                0 0 70px var(--kgi-bright-blue);
+            letter-spacing: 10px; font-weight: 900; z-index: 10;
+            animation: titlePulse 2s infinite alternate;
+            /* 讓標題也稍微有點仰角，配合大樓 */
+            transform: rotateX(10deg);
         }
+        @keyframes titlePulse {
+            from { filter: brightness(1); text-shadow: 0 0 20px var(--kgi-bright-blue); }
+            to { filter: brightness(1.3); text-shadow: 0 0 50px var(--neon-cyan), 0 0 100px var(--neon-white); }
+        }
+
         .slogan {
-            margin-top: 40px; font-size: 2rem;
-            background: linear-gradient(90deg, #fff, var(--kgi-orange));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            opacity: 0; transition: opacity 2s; font-weight: bold; z-index: 5;
+            margin-top: 80px; font-size: 2.5rem; /* 調整位置避免擋住大樓 */
+            font-weight: bold; z-index: 10;
+            color: var(--neon-white);
+            text-shadow: 0 0 20px var(--kgi-orange);
+            opacity: 0; transition: opacity 1s;
+            transform: rotateX(10deg);
+        }
+
+        /* === 大樓容器 (修改重點：移除背景、調整角度) === */
+        .building-wrapper {
+            position: relative; 
+            /* [修改2] 移除 padding, border, 和強烈的底座 shadow，讓它融入背景 */
+            padding: 0;
+            border-bottom: none;
+            box-shadow: none;
+            z-index: 10;
+            /* [修改3] 加大旋轉角度，製造強烈仰視感，並稍微往上提 */
+            transform: rotateX(25deg) translateY(-50px); 
+            transform-style: preserve-3d;
+        }
+
+        .building-grid { display: grid; gap: 5px; margin: 0 auto; }
+
+        /* === 未點亮的格子 (修改重點：加大尺寸) === */
+        .piece {
+            /* [修改1] 加大尺寸至 50px */
+            width: 50px; height: 50px;
+            /* 調整未點亮時的顏色，讓它更像融合在夜空中的暗色玻璃 */
+            background-color: rgba(0, 10, 30, 0.7); 
+            border: 1px solid rgba(0, 150, 255, 0.2);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border-radius: 3px; position: relative;
+            animation: unstableEnergy 0.8s infinite alternate steps(5);
+        }
+        .piece:nth-child(odd) { animation-delay: 0.2s; }
+        .piece:nth-child(3n) { animation-duration: 1.2s; }
+        .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
+
+        @keyframes unstableEnergy {
+            0% { border-color: rgba(0, 150, 255, 0.2); }
+            100% { border-color: rgba(0, 255, 255, 0.4); box-shadow: inset 0 0 10px var(--kgi-bright-blue); }
         }
         
-        .status-light {
-            position: absolute; top: 20px; right: 20px; font-size: 0.9rem; color: #888;
-            display: flex; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; z-index: 200;
+        /* [修改1] Spacer 也要同步加大 */
+        .spacer { width: 50px; height: 50px; background: transparent; pointer-events: none; }
+
+        /* === 激活狀態 (核爆反應) === */
+        .piece.active {
+            background: var(--neon-white) !important;
+            border: 2px solid var(--neon-white) !important;
+            /* 調整光暈大小以配合更大的格子 */
+            box-shadow: 
+                0 0 30px var(--neon-cyan), 
+                0 0 60px var(--kgi-bright-blue), 
+                0 0 100px var(--kgi-bright-blue),
+                0 0 150px var(--neon-cyan) !important;
+            z-index: 100;
+            /* 3D 凸起效果增加 */
+            transform: scale(1.1) translateZ(30px);
+            animation: activePlasma 0.5s infinite alternate !important;
         }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; margin-right: 8px; transition: 0.3s; }
-        .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        @keyframes activePlasma {
+             from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); }
+        }
+
+        /* === 點亮瞬間的爆炸粒子 (JS 動態生成) === */
+        .explosion-particle {
+            position: absolute; width: 8px; height: 8px; /* 粒子稍微加大 */
+            background: var(--neon-white); border-radius: 50%;
+            box-shadow: 0 0 15px var(--color); pointer-events: none; z-index: 200;
+        }
+
+        /* === 點亮瞬間的全螢幕衝擊波 === */
+        .massive-shockwave {
+            position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+            border-radius: 50%; background: transparent;
+            border: 30px solid var(--neon-white); /* 衝擊波加厚 */
+            box-shadow: 0 0 80px var(--neon-cyan), inset 0 0 80px var(--neon-cyan);
+            opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 999;
+        }
+
+        /* === 右側側邊欄 === */
+        .sidebar {
+            flex: 1; background: rgba(5, 15, 30, 0.85); /* 稍微透明一點 */
+            border-left: 3px solid var(--kgi-bright-blue);
+            box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2);
+            display: flex; flex-direction: column; z-index: 50;
+            backdrop-filter: blur(20px);
+        }
+        .sidebar-header {
+            padding: 25px; background: linear-gradient(90deg, var(--kgi-blue), transparent);
+            border-bottom: 2px solid var(--neon-cyan); text-align: center;
+        }
+        .sidebar-header h2 {
+            margin: 0; color: var(--neon-white); font-size: 1.8rem; letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--kgi-orange); font-style: italic;
+        }
+        .message-list { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
+        .msg-card {
+            background: linear-gradient(110deg, rgba(0, 50, 150, 0.3), rgba(0, 0, 0, 0.5));
+            border: 1px solid var(--kgi-bright-blue); border-left: 5px solid var(--kgi-orange);
+            border-radius: 4px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; overflow: hidden;
+            animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .msg-card::before {
+            content: ''; position: absolute; top: 0; left: -150%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-20deg); animation: cardShine 3s infinite;
+        }
+        @keyframes cardShine { 0% { left: -150%; } 30%, 100% { left: 150%; } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+
+        .msg-name { color: var(--neon-cyan); font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: flex; justify-content: space-between;}
+        .msg-time { color: #aaa; font-size: 0.8rem; }
+        .msg-content { font-size: 1.2rem; text-shadow: 1px 1px 2px black; }
+
+        /* === 其他元素 === */
+        .status-light {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0, 0, 0, 0.8); border: 2px solid var(--neon-cyan);
+            padding: 10px 20px; border-radius: 30px; z-index: 200;
+            box-shadow: 0 0 20px var(--neon-cyan); font-weight: bold;
+        }
+        .dot.online { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
         .marquee-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden; pointer-events: none; z-index: 100;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 100;
         }
         .marquee-item {
-            position: absolute; white-space: nowrap; font-size: 1.8rem; color: #fff;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--kgi-blue);
-            font-weight: bold; bottom: -100px; padding: 12px 25px;
-            background: rgba(0, 50, 100, 0.7); border-radius: 50px;
-            animation: flyToTop 8s linear forwards;
-            border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: absolute; white-space: nowrap; font-size: 2.5rem; color: #fff;
+            text-shadow: 0 0 15px var(--kgi-bright-blue), 0 0 30px var(--neon-cyan);
+            font-weight: 900; bottom: -100px; padding: 20px 40px;
+            background: linear-gradient(90deg, var(--kgi-blue), #000); 
+            border: 3px solid var(--neon-white); border-radius: 60px;
+            box-shadow: 0 10px 50px rgba(0, 150, 255, 0.6);
+            animation: flyToTop 6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
         @keyframes flyToTop {
-            0% { bottom: -100px; opacity: 0; transform: scale(0.8); }
-            5% { opacity: 1; transform: scale(1.05); }
-            10% { transform: scale(1); }
+            0% { bottom: -150px; opacity: 0; transform: scale(0.5) rotate(-5deg); }
+            10% { opacity: 1; transform: scale(1.2) rotate(0deg); }
+            20% { transform: scale(1); }
             80% { opacity: 1; }
-            100% { bottom: 110%; opacity: 0; transform: translateX(20px); }
+            100% { bottom: 120%; opacity: 0; transform: scale(1.5) translateY(-100px); }
         }
     </style>
 </head>
 <body>
-
-    <div class="layout-wrapper">
-        <div class="main-display">
-            <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線系統初始化...</span></div>
-            <div class="title">凱基永續．共築願景</div>
-            
-            <div class="building-wrapper">
-                <div class="building-grid" id="building"></div>
-            </div>
-
-            <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
-            <div class="marquee-container" id="marqueeArea"></div>
-        </div>
-
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>📝 祝福紀錄</h2>
-            </div>
-            <div class="message-list" id="messageList">
+    <div id="particles-js"></div>
+    <div id="main-shaker">
+        <div class="layout-wrapper">
+            <div class="main-display" id="displayArea">
+                <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線系統初始化...</span></div>
+                <div class="title">凱基永續．共築願景</div>
+                
+                <div class="building-wrapper">
+                    <div class="building-grid" id="building"></div>
                 </div>
+
+                <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
+                <div class="marquee-container" id="marqueeArea"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>⚡ 即時能量祝願 ⚡</h2>
+                </div>
+                <div class="message-list" id="messageList"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // === 1. 大樓地圖設計 (90格) ===
-        const buildingMap = [
-            [0,0,1,0,0,0,1,0,0], 
-            [0,0,1,1,0,1,1,0,0], 
-            [0,1,1,1,0,1,1,1,0], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,0,0,0,1,1,1]  
-        ];
+        // === 0. 高速背景粒子 ===
+        function createWarpStars() {
+            const container = document.getElementById('particles-js');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.classList.add('warp-star');
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 1}s`);
+                star.style.setProperty('--delay', `${Math.random() * -5}s`);
+                container.appendChild(star);
+            }
+        }
+        createWarpStars();
 
+        // === 1. 大樓與核心邏輯 ===
+        const buildingMap = [
+            [0,0,1,0,0,0,1,0,0], [0,0,1,1,0,1,1,0,0], [0,1,1,1,0,1,1,1,0], 
+            [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], [1,1,1,0,0,0,1,1,1]
+        ];
         let totalPieces = 0;
         let filledCount = 0;
         const building = document.getElementById('building');
@@ -247,69 +299,93 @@
         function initBuilding() {
             building.innerHTML = '';
             const cols = buildingMap[0].length;
-            building.style.gridTemplateColumns = `repeat(${cols}, 35px)`;
-
+            // [修改1] JS這邊也要同步改成 50px
+            building.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
             buildingMap.forEach((row) => {
                 row.forEach((cell) => {
                     const div = document.createElement('div');
                     if (cell === 1) {
-                        div.classList.add('piece');
-                        pieces.push(div);
-                        building.appendChild(div);
-                        totalPieces++;
+                        div.classList.add('piece'); pieces.push(div); building.appendChild(div); totalPieces++;
                     } else {
-                        div.classList.add('spacer');
-                        building.appendChild(div);
+                        div.classList.add('spacer'); building.appendChild(div);
                     }
                 });
             });
         }
 
         function getRandomEmptyIndex() {
-            const emptyIndices = pieces
-                .map((p, index) => p.classList.contains('active') ? -1 : index)
-                .filter(index => index !== -1);
+            const emptyIndices = pieces.map((p, index) => p.classList.contains('active') ? -1 : index).filter(index => index !== -1);
             if (emptyIndices.length === 0) return -1;
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        // === 新增：添加記錄到右側列表 ===
-        function addToSidebar(name, msg) {
-            const list = document.getElementById('messageList');
-            
-            // 建立卡片元素
-            const card = document.createElement('div');
-            card.classList.add('msg-card');
-            
-            // 取得目前時間
-            const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        // === 核心：觸發炸裂特效 (配合新尺寸調整參數) ===
+        function triggerEnergyExplosion(targetElement) {
+            const rect = targetElement.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const displayArea = document.getElementById('displayArea');
 
-            card.innerHTML = `
-                <div class="msg-name">
-                    ${name}
-                    <span class="msg-time">${timeStr}</span>
-                </div>
-                <div class="msg-content">${msg}</div>
-            `;
+            const shaker = document.getElementById('main-shaker');
+            shaker.classList.remove('screen-shake');
+            void shaker.offsetWidth;
+            shaker.classList.add('screen-shake');
 
-            // 將新訊息插入到最上方
-            list.insertBefore(card, list.firstChild);
+            const shockwave = document.createElement('div');
+            shockwave.classList.add('massive-shockwave');
+            shockwave.style.left = centerX + 'px';
+            shockwave.style.top = centerY + 'px';
+            displayArea.appendChild(shockwave);
+            
+            // 衝擊波範圍加大
+            shockwave.animate([
+                { width: '0px', height: '0px', opacity: 1, borderWidth: '60px' },
+                { width: '1800px', height: '1800px', opacity: 0, borderWidth: '0px' }
+            ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
+
+            const particleCount = 30;
+            const colors = ['#00ffff', '#ffffff', '#0080ff', '#ff6600'];
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('div');
+                p.classList.add('explosion-particle');
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                p.style.setProperty('--color', p.style.backgroundColor);
+                p.style.left = centerX + 'px';
+                p.style.top = centerY + 'px';
+                displayArea.appendChild(p);
+
+                // 爆炸範圍加大
+                const destinationX = (Math.random() - 0.5) * 800;
+                const destinationY = (Math.random() - 0.5) * 800;
+                const rotation = Math.random() * 720;
+
+                p.animate([
+                    { transform: `translate(0,0) scale(1) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate(${destinationX}px, ${destinationY}px) scale(0) rotate(${rotation}deg)`, opacity: 0 }
+                ], { duration: 1000 + Math.random() * 500, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' }).onfinish = () => p.remove();
+            }
         }
 
-        // 接收到訊息時觸發
+        function addToSidebar(name, msg) {
+            const list = document.getElementById('messageList');
+            const card = document.createElement('div');
+            card.classList.add('msg-card');
+            const now = new Date();
+            card.innerHTML = `<div class="msg-name">${name}<span class="msg-time">${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}</span></div><div class="msg-content">${msg}</div>`;
+            list.insertBefore(card, list.firstChild);
+            if (list.children.length > 50) list.removeChild(list.lastChild);
+        }
+
         function onMessageReceived(name, msg) {
-            // 1. 新增到右側列表 (即使大樓滿了也繼續紀錄)
             addToSidebar(name, msg);
-
-            // 2. 處理大樓點亮邏輯
             if (filledCount >= totalPieces) return;
-
             const targetIndex = getRandomEmptyIndex();
             if (targetIndex !== -1) {
-                pieces[targetIndex].classList.add('active');
+                const targetPiece = pieces[targetIndex];
+                targetPiece.classList.add('active');
                 filledCount++;
                 
+                triggerEnergyExplosion(targetPiece);
                 showMarquee(`${name}：${msg}`);
 
                 if (filledCount === totalPieces) {
@@ -322,78 +398,45 @@
         }
 
         function showMarquee(text) {
-            // 限制只在左側區域 (.main-display) 顯示，因 marquee-container 已被包在裡面
             const container = document.getElementById('marqueeArea');
             const el = document.createElement('div');
             el.classList.add('marquee-item');
             el.innerText = text;
-            
             const colors = ['#fff', '#ffd700', '#7df9ff', '#ffb74d'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
-            el.style.color = colors[Math.floor(Math.random() * colors.length)];
-            
             el.style.left = (5 + Math.random() * 80) + '%';
-            
             container.appendChild(el);
-            setTimeout(() => { el.remove(); }, 8000);
+            setTimeout(() => { el.remove(); }, 6000);
         }
 
         function triggerCompletionEffect() {
             pieces.forEach((p, i) => {
                 setTimeout(() => {
-                    p.style.transform = 'scale(1.25)';
-                    p.style.boxShadow = '0 0 35px white';
+                    // 完成特效也要配合 3D 視角調整
+                    p.style.transform = 'scale(1.5) translateZ(150px)';
+                    p.style.boxShadow = '0 0 100px white, 0 0 150px var(--neon-cyan)';
+                    p.style.zIndex = 200;
                     setTimeout(() => {
-                        p.style.transform = 'scale(1.15)';
-                        p.style.boxShadow = '0 0 20px var(--light-color)';
-                    }, 300);
-                }, (i % 9) * 100 + (Math.floor(i / 9) * 50));
+                        p.style.transform = 'scale(1.2) translateZ(50px)';
+                         p.style.boxShadow = '0 0 30px var(--neon-cyan), 0 0 60px var(--kgi-bright-blue)';
+                        p.style.zIndex = 100;
+                    }, 600);
+                }, (i % 9) * 60 + (Math.floor(i / 9) * 30));
             });
+             document.querySelector('.title').style.animation = 'none';
+             document.querySelector('.title').style.textShadow = '0 0 50px var(--kgi-orange), 0 0 100px var(--kgi-orange)';
         }
 
-        // === MQTT 連線設定 (SSL) ===
-        const broker = "broker.emqx.io";
-        const port = 8084;
-        const topic = "kgi_event_2025_live_demo"; // 確認 Topic 與手機端一致
+        // === MQTT (SSL) ===
+        const broker = "broker.emqx.io"; const port = 8084; const topic = "kgi_event_2025_live_demo";
         const clientID = "monitor_" + new Date().getTime();
-
         const client = new Paho.MQTT.Client(broker, port, clientID);
-
-        client.onConnectionLost = function (responseObject) {
-            document.getElementById('statusDot').classList.remove('online');
-            document.getElementById('statusText').innerText = "連線中斷，嘗試重連...";
-            console.log("Connection Lost: " + responseObject.errorMessage);
-            setTimeout(connectMQTT, 2000);
-        };
-
-        client.onMessageArrived = function (message) {
-            console.log("收到訊息:" + message.payloadString);
-            try {
-                const data = JSON.parse(message.payloadString);
-                onMessageReceived(data.name, data.msg);
-            } catch (e) {
-                console.error("JSON 解析錯誤");
-            }
-        };
-
+        client.onConnectionLost = function (res) { document.getElementById('statusDot').classList.remove('online'); document.getElementById('statusText').innerText = "連線中斷..."; setTimeout(connectMQTT, 2000); };
+        client.onMessageArrived = function (msg) { try { const data = JSON.parse(msg.payloadString); onMessageReceived(data.name, data.msg); } catch (e) {} };
         function connectMQTT() {
-            client.connect({
-                useSSL: true,
-                onSuccess: function () {
-                    console.log("MQTT 連線成功");
-                    document.getElementById('statusDot').classList.add('online');
-                    document.getElementById('statusText').innerText = `連線就緒 (目標: ${totalPieces}格)`;
-                    client.subscribe(topic);
-                },
-                onFailure: function (e) {
-                    console.log("連線失敗", e);
-                }
-            });
+            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒 (${totalPieces}格)`; client.subscribe(topic); }, onFailure: function () {} });
         }
-
-        initBuilding();
-        connectMQTT();
-
+        initBuilding(); connectMQTT();
     </script>
 </body>
 </html>
