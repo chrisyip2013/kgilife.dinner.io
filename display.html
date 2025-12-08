@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (核爆炸裂版)</title>
+    <title>凱基永續．共築願景 (仰視炸裂版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
-            /* 顏色調整為更高對比、更刺眼的霓虹色 */
             --bg-color: #000510;
-            --glass-off: rgba(0, 100, 255, 0.1);
             --kgi-blue: #004a99;
             --kgi-bright-blue: #0080ff;
             --kgi-orange: #ff6600;
@@ -24,7 +22,7 @@
             color: white;
             font-family: "Microsoft JhengHei", sans-serif;
             height: 100vh; overflow: hidden;
-            perspective: 1000px;
+            /* 移除這裡的 perspective，移到 main-display */
         }
 
         /* === 全螢幕震動特效 Class === */
@@ -59,7 +57,7 @@
         @keyframes warpSpeed {
             0% { opacity: 0; transform: translateY(0) scale(0.5); }
             10% { opacity: 1; }
-            100% { opacity: 0; transform: translateY(-100vh) scale(5); height: 50px; } /* 拉長變光束 */
+            100% { opacity: 0; transform: translateY(-100vh) scale(5); height: 50px; }
         }
 
         /* === 版面配置 === */
@@ -68,19 +66,20 @@
             position: relative; z-index: 10;
         }
 
-        /* === 左側主顯示區 === */
+        /* === 左側主顯示區 (修改重點：3D視角設定) === */
         .main-display {
             flex: 3; position: relative;
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            /* 加入掃描線與雜訊紋理 */
             background-image: 
                 linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%),
                 radial-gradient(transparent, black);
             background-size: 10px 10px, 100% 100%;
+            /* [修改3] 設定強烈的 3D 透視感 */
+            perspective: 1200px;
+            perspective-origin: 50% 70%; /*視角設定在畫面中下方，製造仰視感*/
         }
 
-        /* 標題炸裂光效 */
         .title {
             font-size: 4rem; margin-bottom: 30px; color: var(--neon-white);
             text-shadow: 
@@ -89,6 +88,8 @@
                 0 0 70px var(--kgi-bright-blue);
             letter-spacing: 10px; font-weight: 900; z-index: 10;
             animation: titlePulse 2s infinite alternate;
+            /* 讓標題也稍微有點仰角，配合大樓 */
+            transform: rotateX(10deg);
         }
         @keyframes titlePulse {
             from { filter: brightness(1); text-shadow: 0 0 20px var(--kgi-bright-blue); }
@@ -96,63 +97,66 @@
         }
 
         .slogan {
-            margin-top: 60px; font-size: 2.5rem;
+            margin-top: 80px; font-size: 2.5rem; /* 調整位置避免擋住大樓 */
             font-weight: bold; z-index: 10;
             color: var(--neon-white);
             text-shadow: 0 0 20px var(--kgi-orange);
-            opacity: 0;
-            transition: opacity 1s;
+            opacity: 0; transition: opacity 1s;
+            transform: rotateX(10deg);
         }
 
-        /* === 大樓主體 (反應爐核心) === */
+        /* === 大樓容器 (修改重點：移除背景、調整角度) === */
         .building-wrapper {
-            position: relative; padding: 50px;
-            /* 強烈的能量底座 */
-            box-shadow: 
-                0 50px 100px rgba(0, 128, 255, 0.3),
-                inset 0 0 50px rgba(0, 255, 255, 0.1);
-            border-bottom: 5px solid var(--neon-cyan);
+            position: relative; 
+            /* [修改2] 移除 padding, border, 和強烈的底座 shadow，讓它融入背景 */
+            padding: 0;
+            border-bottom: none;
+            box-shadow: none;
             z-index: 10;
-            transform: rotateX(5deg); /* 微 3D */
+            /* [修改3] 加大旋轉角度，製造強烈仰視感，並稍微往上提 */
+            transform: rotateX(25deg) translateY(-50px); 
+            transform-style: preserve-3d;
         }
 
-        .building-grid { display: grid; gap: 4px; margin: 0 auto; }
+        .building-grid { display: grid; gap: 5px; margin: 0 auto; }
 
-        /* 未點亮的格子 (不穩定的能量) */
+        /* === 未點亮的格子 (修改重點：加大尺寸) === */
         .piece {
-            width: 35px; height: 35px;
-            background-color: rgba(0, 20, 50, 0.6);
-            border: 1px solid rgba(0, 150, 255, 0.3);
-            box-shadow: inset 0 0 10px rgba(0,0,0,1);
-            border-radius: 2px; position: relative;
-            /* 快速、不規則的閃爍 */
+            /* [修改1] 加大尺寸至 50px */
+            width: 50px; height: 50px;
+            /* 調整未點亮時的顏色，讓它更像融合在夜空中的暗色玻璃 */
+            background-color: rgba(0, 10, 30, 0.7); 
+            border: 1px solid rgba(0, 150, 255, 0.2);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border-radius: 3px; position: relative;
             animation: unstableEnergy 0.8s infinite alternate steps(5);
         }
-        /* 隨機延遲製造雜亂感 */
         .piece:nth-child(odd) { animation-delay: 0.2s; }
         .piece:nth-child(3n) { animation-duration: 1.2s; }
         .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
 
         @keyframes unstableEnergy {
-            0% { border-color: rgba(0, 150, 255, 0.3); background-color: rgba(0, 20, 50, 0.6); }
-            50% { border-color: rgba(0, 255, 255, 0.5); }
-            100% { border-color: rgba(0, 100, 255, 0.8); background-color: rgba(0, 40, 80, 0.7); box-shadow: inset 0 0 15px var(--kgi-bright-blue); }
+            0% { border-color: rgba(0, 150, 255, 0.2); }
+            100% { border-color: rgba(0, 255, 255, 0.4); box-shadow: inset 0 0 10px var(--kgi-bright-blue); }
         }
-        .spacer { width: 35px; height: 35px; background: transparent; pointer-events: none; }
+        
+        /* [修改1] Spacer 也要同步加大 */
+        .spacer { width: 50px; height: 50px; background: transparent; pointer-events: none; }
 
         /* === 激活狀態 (核爆反應) === */
         .piece.active {
             background: var(--neon-white) !important;
             border: 2px solid var(--neon-white) !important;
-            /* 極限輝光，多層疊加產生致盲效果 */
+            /* 調整光暈大小以配合更大的格子 */
             box-shadow: 
-                0 0 20px var(--neon-cyan), 
-                0 0 50px var(--kgi-bright-blue), 
-                0 0 80px var(--kgi-bright-blue),
-                0 0 120px var(--neon-cyan) !important;
+                0 0 30px var(--neon-cyan), 
+                0 0 60px var(--kgi-bright-blue), 
+                0 0 100px var(--kgi-bright-blue),
+                0 0 150px var(--neon-cyan) !important;
             z-index: 100;
-            transform: scale(1.1);
-            animation: activePlasma 0.5s infinite alternate !important; /* 極速等離子閃爍 */
+            /* 3D 凸起效果增加 */
+            transform: scale(1.1) translateZ(30px);
+            animation: activePlasma 0.5s infinite alternate !important;
         }
         @keyframes activePlasma {
              from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); }
@@ -160,68 +164,48 @@
 
         /* === 點亮瞬間的爆炸粒子 (JS 動態生成) === */
         .explosion-particle {
-            position: absolute;
-            width: 6px; height: 6px;
-            background: var(--neon-white);
-            border-radius: 50%;
-            box-shadow: 0 0 15px var(--color);
-            pointer-events: none;
-            z-index: 200;
+            position: absolute; width: 8px; height: 8px; /* 粒子稍微加大 */
+            background: var(--neon-white); border-radius: 50%;
+            box-shadow: 0 0 15px var(--color); pointer-events: none; z-index: 200;
         }
 
         /* === 點亮瞬間的全螢幕衝擊波 === */
         .massive-shockwave {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            border-radius: 50%;
-            background: transparent;
-            border: 20px solid var(--neon-white);
-            box-shadow: 0 0 50px var(--neon-cyan), inset 0 0 50px var(--neon-cyan);
-            opacity: 1;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 999;
+            position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+            border-radius: 50%; background: transparent;
+            border: 30px solid var(--neon-white); /* 衝擊波加厚 */
+            box-shadow: 0 0 80px var(--neon-cyan), inset 0 0 80px var(--neon-cyan);
+            opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 999;
         }
 
-        /* === 右側側邊欄 (更強的科技感) === */
+        /* === 右側側邊欄 === */
         .sidebar {
-            flex: 1; 
-            background: rgba(5, 15, 30, 0.95);
+            flex: 1; background: rgba(5, 15, 30, 0.85); /* 稍微透明一點 */
             border-left: 3px solid var(--kgi-bright-blue);
-            box-shadow: -20px 0 50px rgba(0, 100, 255, 0.4);
+            box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2);
             display: flex; flex-direction: column; z-index: 50;
             backdrop-filter: blur(20px);
         }
         .sidebar-header {
-            padding: 25px;
-            background: linear-gradient(90deg, var(--kgi-blue), transparent);
-            border-bottom: 2px solid var(--neon-cyan);
-            text-align: center;
+            padding: 25px; background: linear-gradient(90deg, var(--kgi-blue), transparent);
+            border-bottom: 2px solid var(--neon-cyan); text-align: center;
         }
         .sidebar-header h2 {
             margin: 0; color: var(--neon-white); font-size: 1.8rem; letter-spacing: 3px;
             text-shadow: 0 0 15px var(--kgi-orange); font-style: italic;
         }
-        .message-list {
-            flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth;
-        }
+        .message-list { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
         .msg-card {
             background: linear-gradient(110deg, rgba(0, 50, 150, 0.3), rgba(0, 0, 0, 0.5));
-            border: 1px solid var(--kgi-bright-blue);
-            border-left: 5px solid var(--kgi-orange);
+            border: 1px solid var(--kgi-bright-blue); border-left: 5px solid var(--kgi-orange);
             border-radius: 4px; padding: 15px; margin-bottom: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            position: relative; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; overflow: hidden;
             animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        /* 卡片掃光特效 */
         .msg-card::before {
-            content: ''; position: absolute; top: 0; left: -150%;
-            width: 100%; height: 100%;
+            content: ''; position: absolute; top: 0; left: -150%; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: skewX(-20deg);
-            animation: cardShine 3s infinite;
+            transform: skewX(-20deg); animation: cardShine 3s infinite;
         }
         @keyframes cardShine { 0% { left: -150%; } 30%, 100% { left: 150%; } }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
@@ -239,6 +223,9 @@
         }
         .dot.online { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
+        .marquee-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 100;
+        }
         .marquee-item {
             position: absolute; white-space: nowrap; font-size: 2.5rem; color: #fff;
             text-shadow: 0 0 15px var(--kgi-bright-blue), 0 0 30px var(--neon-cyan);
@@ -290,7 +277,7 @@
                 const star = document.createElement('div');
                 star.classList.add('warp-star');
                 star.style.left = `${Math.random() * 100}%`;
-                star.style.setProperty('--duration', `${Math.random() * 3 + 1}s`); // 更快的速度
+                star.style.setProperty('--duration', `${Math.random() * 3 + 1}s`);
                 star.style.setProperty('--delay', `${Math.random() * -5}s`);
                 container.appendChild(star);
             }
@@ -312,7 +299,8 @@
         function initBuilding() {
             building.innerHTML = '';
             const cols = buildingMap[0].length;
-            building.style.gridTemplateColumns = `repeat(${cols}, 35px)`;
+            // [修改1] JS這邊也要同步改成 50px
+            building.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
             buildingMap.forEach((row) => {
                 row.forEach((cell) => {
                     const div = document.createElement('div');
@@ -331,33 +319,30 @@
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        // === 核心：觸發炸裂特效 ===
+        // === 核心：觸發炸裂特效 (配合新尺寸調整參數) ===
         function triggerEnergyExplosion(targetElement) {
             const rect = targetElement.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             const displayArea = document.getElementById('displayArea');
 
-            // 1. 全螢幕震動
             const shaker = document.getElementById('main-shaker');
             shaker.classList.remove('screen-shake');
-            void shaker.offsetWidth; // 觸發重繪
+            void shaker.offsetWidth;
             shaker.classList.add('screen-shake');
 
-            // 2. 巨大衝擊波環
             const shockwave = document.createElement('div');
             shockwave.classList.add('massive-shockwave');
             shockwave.style.left = centerX + 'px';
             shockwave.style.top = centerY + 'px';
             displayArea.appendChild(shockwave);
             
-            // 使用 JS 動畫達到更劇烈的效果
+            // 衝擊波範圍加大
             shockwave.animate([
-                { width: '0px', height: '0px', opacity: 1, borderWidth: '50px' },
-                { width: '1500px', height: '1500px', opacity: 0, borderWidth: '0px' }
-            ], { duration: 800, easing: 'ease-out' }).onfinish = () => shockwave.remove();
+                { width: '0px', height: '0px', opacity: 1, borderWidth: '60px' },
+                { width: '1800px', height: '1800px', opacity: 0, borderWidth: '0px' }
+            ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
-            // 3. 噴發粒子火花
             const particleCount = 30;
             const colors = ['#00ffff', '#ffffff', '#0080ff', '#ff6600'];
             for (let i = 0; i < particleCount; i++) {
@@ -369,8 +354,9 @@
                 p.style.top = centerY + 'px';
                 displayArea.appendChild(p);
 
-                const destinationX = (Math.random() - 0.5) * 600; // 爆炸範圍
-                const destinationY = (Math.random() - 0.5) * 600;
+                // 爆炸範圍加大
+                const destinationX = (Math.random() - 0.5) * 800;
+                const destinationY = (Math.random() - 0.5) * 800;
                 const rotation = Math.random() * 720;
 
                 p.animate([
@@ -399,7 +385,6 @@
                 targetPiece.classList.add('active');
                 filledCount++;
                 
-                // 觸發炸裂特效！
                 triggerEnergyExplosion(targetPiece);
                 showMarquee(`${name}：${msg}`);
 
@@ -425,20 +410,19 @@
         }
 
         function triggerCompletionEffect() {
-            // 完成時的超級波浪
             pieces.forEach((p, i) => {
                 setTimeout(() => {
-                    p.style.transform = 'scale(1.5) translateZ(100px)';
+                    // 完成特效也要配合 3D 視角調整
+                    p.style.transform = 'scale(1.5) translateZ(150px)';
                     p.style.boxShadow = '0 0 100px white, 0 0 150px var(--neon-cyan)';
                     p.style.zIndex = 200;
                     setTimeout(() => {
-                        p.style.transform = 'scale(1.2) translateZ(20px)';
-                         p.style.boxShadow = '0 0 20px var(--neon-cyan), 0 0 50px var(--kgi-bright-blue)';
+                        p.style.transform = 'scale(1.2) translateZ(50px)';
+                         p.style.boxShadow = '0 0 30px var(--neon-cyan), 0 0 60px var(--kgi-bright-blue)';
                         p.style.zIndex = 100;
                     }, 600);
                 }, (i % 9) * 60 + (Math.floor(i / 9) * 30));
             });
-             // 標題變色慶祝
              document.querySelector('.title').style.animation = 'none';
              document.querySelector('.title').style.textShadow = '0 0 50px var(--kgi-orange), 0 0 100px var(--kgi-orange)';
         }
