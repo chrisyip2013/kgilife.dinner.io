@@ -3,202 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (大螢幕)</title>
+    <title>凱基永續．共築願景 (大螢幕終極版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
-            --bg-color: #0b1e36;
-            --glass-off: rgba(255, 255, 255, 0.12);
-            --kgi-blue: #0056b3;
-            --kgi-orange: #f39800;
-            --light-color: #7df9ff;
-            --sidebar-bg: #061220;
+            --bg-color: #040d1a; /* 更深的宇宙藍 */
+            --glass-off: rgba(0, 86, 179, 0.15); /* 未點亮時帶點藍色調 */
+            --kgi-blue: #0066cc;
+            --kgi-orange: #ff9900;
+            --light-cyan: #00ffff; /* 科技青光 */
+            --sidebar-bg: rgba(6, 18, 32, 0.85);
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: var(--bg-color);
             color: white;
             font-family: "Microsoft JhengHei", sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* === 背景粒子特效層 === */
+        #particles-js {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle at center bottom, #1b3a63 0%, #000000 80%);
+            z-index: 1;
+        }
+        .particle {
+            position: absolute;
+            bottom: -10px;
+            background: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 10px var(--light-cyan);
+            border-radius: 50%;
+            animation: riseUp var(--speed) linear infinite;
+            z-index: 1;
+        }
+        @keyframes riseUp {
+            0% { bottom: -20px; opacity: 0; transform: translateX(0); }
+            50% { opacity: 1; }
+            100% { bottom: 100vh; opacity: 0; transform: translateX(var(--drift)); }
         }
 
         /* === 版面配置容器 === */
         .layout-wrapper {
-            display: flex;
-            width: 100%;
-            height: 100%;
+            display: flex; width: 100%; height: 100%;
+            position: relative; z-index: 5; /* 在粒子層之上 */
         }
 
         /* === 左側：大樓展示區 === */
         .main-display {
-            flex: 3; /* 佔 3/4 空間 */
+            flex: 3; position: relative;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            overflow: hidden;
+            /* 加入一點數位掃描線的紋理 */
+            background-image: linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 4px;
+        }
+
+        .title {
+            font-size: 3.5rem; margin-bottom: 30px; color: #fff;
+            text-shadow: 0 0 20px var(--kgi-blue), 0 0 40px var(--light-cyan);
+            letter-spacing: 8px; font-weight: bold; z-index: 5;
             position: relative;
-            background: radial-gradient(circle at center, #1b3a63 0%, #000000 90%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; /* 確保彈幕不出界 */
+        }
+        /* 標題下方的科技光條 */
+        .title::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%;
+            transform: translateX(-50%); width: 60%; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--kgi-blue), var(--light-cyan), transparent);
+            box-shadow: 0 0 15px var(--kgi-blue);
         }
 
-        /* === 右側：祝福紀錄區 === */
-        .sidebar {
-            flex: 1; /* 佔 1/4 空間 */
-            background-color: var(--sidebar-bg);
-            border-left: 2px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
-            z-index: 20; /* 確保在最上層 */
+        .slogan {
+            margin-top: 50px; font-size: 2.2rem;
+            background: linear-gradient(90deg, #fff, var(--kgi-orange), #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            opacity: 0; transition: opacity 2s; font-weight: bold; z-index: 5;
+            animation: shineText 3s linear infinite; /* 文字流光特效 */
         }
+        @keyframes shineText { to { background-position: 200% center; } }
 
-        .sidebar-header {
-            padding: 20px;
-            background: rgba(0, 86, 179, 0.2);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-        }
-
-        .sidebar-header h2 {
-            margin: 0;
-            color: var(--kgi-orange);
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-        }
-
-        .message-list {
-            flex: 1;
-            overflow-y: auto; /* 允許垂直捲動 */
-            padding: 20px;
-            scroll-behavior: smooth;
-        }
-
-        /* 隱藏捲軸美化 */
-        .message-list::-webkit-scrollbar { width: 6px; }
-        .message-list::-webkit-scrollbar-track { background: #0b1e36; }
-        .message-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-
-        /* 單則祝福卡片樣式 */
-        .msg-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--kgi-blue);
-            animation: slideIn 0.5s ease-out;
-            transition: all 0.3s;
-        }
-
-        .msg-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-
-        .msg-name {
-            color: var(--light-color);
-            font-size: 0.95rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .msg-time {
-            font-size: 0.8rem;
-            color: #666;
-            font-weight: normal;
-        }
-
-        .msg-content {
-            font-size: 1.1rem;
-            color: #fff;
-            line-height: 1.4;
-            word-break: break-all;
-        }
-
-        /* 卡片進場動畫 */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* === 原本的大樓與彈幕樣式 (維持不變) === */
+        /* === 大樓主體 === */
         .building-wrapper {
-            position: relative;
-            padding: 30px;
-            border-bottom: 2px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 20px 50px rgba(0, 86, 179, 0.1); 
+            position: relative; padding: 40px;
+            /* 更強的地面反射光 */
+            border-bottom: 3px solid rgba(0, 255, 255, 0.3); 
+            box-shadow: 0 30px 80px rgba(0, 102, 204, 0.4), inset 0 -20px 30px rgba(0,0,0,0.5); 
             z-index: 5;
+            transform-style: preserve-3d;
+            perspective: 1000px;
         }
 
         .building-grid {
-            display: grid;
-            gap: 3px;
-            margin: 0 auto;
+            display: grid; gap: 4px; margin: 0 auto;
+            transform: rotateX(10deg); /* 微微的 3D 仰角 */
         }
 
         .piece {
             width: 35px; height: 35px;
             background-color: var(--glass-off);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
             transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 3px;
+            border-radius: 2px;
+            position: relative; overflow: hidden;
+            /* 待機時的呼吸燈特效 */
+            animation: idlePulse 4s infinite alternate;
         }
-        .spacer { width: 35px; height: 35px; background: transparent; pointer-events: none; }
-        .piece.active {
-            background: linear-gradient(135deg, #fff 0%, var(--light-color) 40%, var(--kgi-blue) 100%);
-            box-shadow: 0 0 20px var(--light-color);
-            transform: scale(1.15); z-index: 10; border: 1px solid #fff;
-        }
-        .piece.active::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.95); opacity: 0; animation: flash 0.5s ease-out; border-radius: 3px;
-        }
-        @keyframes flash { 0% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0; transform: scale(1); } }
-
-        .title {
-            font-size: 3rem; margin-bottom: 25px; color: #fff;
-            text-shadow: 0 0 25px var(--kgi-blue); letter-spacing: 8px; font-weight: bold; z-index: 5;
-        }
-        .slogan {
-            margin-top: 40px; font-size: 2rem;
-            background: linear-gradient(90deg, #fff, var(--kgi-orange));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            opacity: 0; transition: opacity 2s; font-weight: bold; z-index: 5;
+        @keyframes idlePulse {
+            0% { border-color: rgba(100, 200, 255, 0.2); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 0 transparent; }
+            100% { border-color: rgba(0, 255, 255, 0.5); box-shadow: inset 0 0 5px rgba(0, 255, 255, 0.2), 0 0 10px rgba(0, 255, 255, 0.3); }
         }
         
+        /* 隨機延遲每個格子的呼吸，製造錯落感 */
+        .piece:nth-child(odd) { animation-delay: 0.5s; }
+        .piece:nth-child(3n) { animation-delay: 1.2s; }
+
+        .spacer { width: 35px; height: 35px; background: transparent; pointer-events: none; }
+
+        /* === 激活狀態 (炫炮核心) === */
+        .piece.active {
+            background: linear-gradient(135deg, #e6f7ff 0%, var(--light-cyan) 40%, var(--kgi-blue) 100%);
+            /* 多層次強力光暈 */
+            box-shadow: 
+                0 0 20px var(--light-cyan), 
+                0 0 40px var(--kgi-blue), 
+                inset 0 0 15px rgba(255,255,255,0.8);
+            transform: scale(1.2) translateZ(20px); /* 3D 凸起感 */
+            z-index: 50;
+            border: 2px solid #fff;
+            animation: none; /* 停止呼吸動畫 */
+        }
+
+        /* 激活時的閃光衝擊波 */
+        .piece.active::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, #fff 0%, transparent 70%);
+            opacity: 0; transform: translate(-50%, -50%) scale(0);
+            animation: shockwave 0.6s ease-out;
+        }
+        @keyframes shockwave {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(3); }
+        }
+
+        /* 激活後的持續流光效果 (Shimmer) */
+        .piece.active::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(to bottom right, transparent, rgba(255,255,255,0.8), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite linear;
+        }
+        @keyframes shimmer { from { transform: translateX(-100%) rotate(45deg); } to { transform: translateX(100%) rotate(45deg); } }
+
+
+        /* === 右側：祝福紀錄區 (UI 優化) === */
+        .sidebar {
+            flex: 1; 
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--kgi-blue);
+            box-shadow: -10px 0 30px rgba(0, 102, 204, 0.3);
+            display: flex; flex-direction: column; z-index: 20;
+            backdrop-filter: blur(10px); /* 毛玻璃特效 */
+        }
+        .sidebar-header {
+            padding: 25px;
+            background: linear-gradient(90deg, rgba(0, 86, 179, 0.4), transparent);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            text-align: center; position: relative; overflow: hidden;
+        }
+        /* 標題的光掃過特效 */
+        .sidebar-header::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: sidebarShine 5s infinite linear;
+        }
+        @keyframes sidebarShine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+
+        .sidebar-header h2 {
+            margin: 0; color: var(--kgi-orange); font-size: 1.6rem; letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(243, 152, 0, 0.5);
+        }
+
+        .message-list {
+            flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth;
+        }
+        .message-list::-webkit-scrollbar { width: 5px; }
+        .message-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .message-list::-webkit-scrollbar-thumb { background: var(--kgi-blue); border-radius: 3px; }
+
+        .msg-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 102, 204, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            border-radius: 8px; padding: 15px; margin-bottom: 15px;
+            border-left: 4px solid var(--kgi-orange); /* 改用橘色突出 */
+            animation: slideIn 0.5s ease-out; transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .msg-card:hover {
+            background: rgba(0, 102, 204, 0.2); transform: translateX(10px) scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2); border-color: var(--light-cyan);
+        }
+        .msg-name {
+            color: var(--light-cyan); font-size: 1rem; font-weight: bold;
+            margin-bottom: 8px; display: flex; justify-content: space-between;
+        }
+        .msg-time { font-size: 0.8rem; color: #aaa; font-weight: normal; }
+        .msg-content { font-size: 1.1rem; color: #fff; line-height: 1.4; word-break: break-all; text-shadow: 1px 1px 2px black;}
+        @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* === 其他元素 === */
         .status-light {
-            position: absolute; top: 20px; right: 20px; font-size: 0.9rem; color: #888;
-            display: flex; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; z-index: 200;
+            position: absolute; top: 20px; right: 20px; font-size: 0.9rem; color: var(--light-cyan);
+            display: flex; align-items: center; background: rgba(0, 86, 179, 0.6); padding: 8px 15px; 
+            border-radius: 20px; z-index: 200; border: 1px solid var(--light-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
         }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; margin-right: 8px; transition: 0.3s; }
-        .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
 
         .marquee-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden; pointer-events: none; z-index: 100;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 100;
         }
         .marquee-item {
-            position: absolute; white-space: nowrap; font-size: 1.8rem; color: #fff;
-            text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--kgi-blue);
-            font-weight: bold; bottom: -100px; padding: 12px 25px;
-            background: rgba(0, 50, 100, 0.7); border-radius: 50px;
-            animation: flyToTop 8s linear forwards;
-            border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: absolute; white-space: nowrap; font-size: 2rem; color: #fff;
+            text-shadow: 0 0 10px var(--kgi-blue), 0 0 20px var(--light-cyan);
+            font-weight: bold; bottom: -100px; padding: 15px 30px;
+            background: linear-gradient(90deg, rgba(0, 50, 100, 0.8), rgba(0, 102, 204, 0.8)); 
+            border-radius: 50px; animation: flyToTop 7s linear forwards;
+            border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
         }
         @keyframes flyToTop {
-            0% { bottom: -100px; opacity: 0; transform: scale(0.8); }
-            5% { opacity: 1; transform: scale(1.05); }
-            10% { transform: scale(1); }
+            0% { bottom: -150px; opacity: 0; transform: scale(0.5); }
+            10% { opacity: 1; transform: scale(1.1); }
+            15% { transform: scale(1); }
             80% { opacity: 1; }
-            100% { bottom: 110%; opacity: 0; transform: translateX(20px); }
+            100% { bottom: 120%; opacity: 0; transform: scale(1.2) translateX(50px); }
         }
     </style>
 </head>
 <body>
+    <div id="particles-js"></div>
 
     <div class="layout-wrapper">
         <div class="main-display">
@@ -215,7 +264,7 @@
 
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>📝 祝福紀錄</h2>
+                <h2>✨ 祝福紀錄牆 ✨</h2>
             </div>
             <div class="message-list" id="messageList">
                 </div>
@@ -223,6 +272,27 @@
     </div>
 
     <script>
+        // === 0. 背景粒子生成 ===
+        function createParticles() {
+            const container = document.getElementById('particles-js');
+            const particleCount = 50; // 粒子數量
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                // 隨機大小、位置、速度和飄移方向
+                const size = Math.random() * 5 + 2;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.setProperty('--speed', `${Math.random() * 10 + 10}s`);
+                particle.style.setProperty('--drift', `${Math.random() * 200 - 100}px`);
+                particle.style.animationDelay = `${Math.random() * -20}s`; // 隨機延遲讓它們一開始就佈滿畫面
+                particle.style.opacity = Math.random() * 0.5 + 0.2;
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
         // === 1. 大樓地圖設計 (90格) ===
         const buildingMap = [
             [0,0,1,0,0,0,1,0,0], 
@@ -273,45 +343,31 @@
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        // === 新增：添加記錄到右側列表 ===
         function addToSidebar(name, msg) {
             const list = document.getElementById('messageList');
-            
-            // 建立卡片元素
             const card = document.createElement('div');
             card.classList.add('msg-card');
-            
-            // 取得目前時間
             const now = new Date();
             const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
             card.innerHTML = `
-                <div class="msg-name">
-                    ${name}
-                    <span class="msg-time">${timeStr}</span>
-                </div>
+                <div class="msg-name">${name}<span class="msg-time">${timeStr}</span></div>
                 <div class="msg-content">${msg}</div>
             `;
-
-            // 將新訊息插入到最上方
             list.insertBefore(card, list.firstChild);
+            // 保持列表不會無限增長，超過 50 則移除舊的
+            if (list.children.length > 50) {
+                list.removeChild(list.lastChild);
+            }
         }
 
-        // 接收到訊息時觸發
         function onMessageReceived(name, msg) {
-            // 1. 新增到右側列表 (即使大樓滿了也繼續紀錄)
             addToSidebar(name, msg);
-
-            // 2. 處理大樓點亮邏輯
             if (filledCount >= totalPieces) return;
-
             const targetIndex = getRandomEmptyIndex();
             if (targetIndex !== -1) {
                 pieces[targetIndex].classList.add('active');
                 filledCount++;
-                
                 showMarquee(`${name}：${msg}`);
-
                 if (filledCount === totalPieces) {
                     setTimeout(() => {
                         document.getElementById('finalSlogan').style.opacity = 1;
@@ -322,32 +378,30 @@
         }
 
         function showMarquee(text) {
-            // 限制只在左側區域 (.main-display) 顯示，因 marquee-container 已被包在裡面
             const container = document.getElementById('marqueeArea');
             const el = document.createElement('div');
             el.classList.add('marquee-item');
             el.innerText = text;
-            
             const colors = ['#fff', '#ffd700', '#7df9ff', '#ffb74d'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
-            el.style.color = colors[Math.floor(Math.random() * colors.length)];
-            
+            // el.style.color = colors[Math.floor(Math.random() * colors.length)];
             el.style.left = (5 + Math.random() * 80) + '%';
-            
             container.appendChild(el);
-            setTimeout(() => { el.remove(); }, 8000);
+            setTimeout(() => { el.remove(); }, 7000);
         }
 
         function triggerCompletionEffect() {
             pieces.forEach((p, i) => {
                 setTimeout(() => {
-                    p.style.transform = 'scale(1.25)';
-                    p.style.boxShadow = '0 0 35px white';
+                    p.style.transform = 'scale(1.3) translateZ(50px)';
+                    p.style.boxShadow = '0 0 50px white, 0 0 80px var(--light-cyan)';
+                    p.style.zIndex = 100;
                     setTimeout(() => {
-                        p.style.transform = 'scale(1.15)';
-                        p.style.boxShadow = '0 0 20px var(--light-color)';
-                    }, 300);
-                }, (i % 9) * 100 + (Math.floor(i / 9) * 50));
+                        p.style.transform = 'scale(1.2) translateZ(20px)';
+                        p.style.boxShadow = '0 0 20px var(--light-cyan), 0 0 40px var(--kgi-blue)';
+                        p.style.zIndex = 50;
+                    }, 500);
+                }, (i % 9) * 80 + (Math.floor(i / 9) * 40));
             });
         }
 
@@ -356,38 +410,28 @@
         const port = 8084;
         const topic = "kgi_event_2025_live_demo"; // 確認 Topic 與手機端一致
         const clientID = "monitor_" + new Date().getTime();
-
         const client = new Paho.MQTT.Client(broker, port, clientID);
 
         client.onConnectionLost = function (responseObject) {
             document.getElementById('statusDot').classList.remove('online');
-            document.getElementById('statusText').innerText = "連線中斷，嘗試重連...";
-            console.log("Connection Lost: " + responseObject.errorMessage);
+            document.getElementById('statusText').innerText = "連線中斷，重連中...";
             setTimeout(connectMQTT, 2000);
         };
-
         client.onMessageArrived = function (message) {
-            console.log("收到訊息:" + message.payloadString);
             try {
                 const data = JSON.parse(message.payloadString);
                 onMessageReceived(data.name, data.msg);
-            } catch (e) {
-                console.error("JSON 解析錯誤");
-            }
+            } catch (e) { console.error("JSON Error"); }
         };
-
         function connectMQTT() {
             client.connect({
                 useSSL: true,
                 onSuccess: function () {
-                    console.log("MQTT 連線成功");
                     document.getElementById('statusDot').classList.add('online');
-                    document.getElementById('statusText').innerText = `連線就緒 (目標: ${totalPieces}格)`;
+                    document.getElementById('statusText').innerText = `系統連線就緒 (目標: ${totalPieces}格)`;
                     client.subscribe(topic);
                 },
-                onFailure: function (e) {
-                    console.log("連線失敗", e);
-                }
+                onFailure: function (e) { document.getElementById('statusText').innerText = "連線失敗"; }
             });
         }
 
