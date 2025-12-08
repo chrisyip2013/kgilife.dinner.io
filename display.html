@@ -12,6 +12,7 @@
             --kgi-blue: #0056b3;
             --kgi-orange: #f39800;
             --light-color: #7df9ff;
+            --sidebar-bg: #061220;
         }
 
         body {
@@ -20,28 +21,117 @@
             background-color: var(--bg-color);
             color: white;
             font-family: "Microsoft JhengHei", sans-serif;
-            display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        .screen-container {
+        /* === 版面配置容器 === */
+        .layout-wrapper {
+            display: flex;
             width: 100%;
-            height: 100%; /* 確保容器滿版 */
+            height: 100%;
+        }
+
+        /* === 左側：大樓展示區 === */
+        .main-display {
+            flex: 3; /* 佔 3/4 空間 */
+            position: relative;
+            background: radial-gradient(circle at center, #1b3a63 0%, #000000 90%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            position: relative;
-            background: radial-gradient(circle at center, #1b3a63 0%, #000000 90%);
+            overflow: hidden; /* 確保彈幕不出界 */
         }
 
+        /* === 右側：祝福紀錄區 === */
+        .sidebar {
+            flex: 1; /* 佔 1/4 空間 */
+            background-color: var(--sidebar-bg);
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            z-index: 20; /* 確保在最上層 */
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 86, 179, 0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            color: var(--kgi-orange);
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .message-list {
+            flex: 1;
+            overflow-y: auto; /* 允許垂直捲動 */
+            padding: 20px;
+            scroll-behavior: smooth;
+        }
+
+        /* 隱藏捲軸美化 */
+        .message-list::-webkit-scrollbar { width: 6px; }
+        .message-list::-webkit-scrollbar-track { background: #0b1e36; }
+        .message-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* 單則祝福卡片樣式 */
+        .msg-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--kgi-blue);
+            animation: slideIn 0.5s ease-out;
+            transition: all 0.3s;
+        }
+
+        .msg-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .msg-name {
+            color: var(--light-color);
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .msg-time {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .msg-content {
+            font-size: 1.1rem;
+            color: #fff;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        /* 卡片進場動畫 */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* === 原本的大樓與彈幕樣式 (維持不變) === */
         .building-wrapper {
             position: relative;
             padding: 30px;
             border-bottom: 2px solid rgba(255,255,255,0.1); 
             box-shadow: 0 20px 50px rgba(0, 86, 179, 0.1); 
-            z-index: 5; /* 確保大樓在背景之上，但在彈幕之下 */
+            z-index: 5;
         }
 
         .building-grid {
@@ -51,155 +141,89 @@
         }
 
         .piece {
-            width: 35px; 
-            height: 35px;
+            width: 35px; height: 35px;
             background-color: var(--glass-off);
             border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             border-radius: 3px;
         }
-
-        .spacer {
-            width: 35px;
-            height: 35px;
-            background-color: transparent;
-            pointer-events: none;
-        }
-
+        .spacer { width: 35px; height: 35px; background: transparent; pointer-events: none; }
         .piece.active {
             background: linear-gradient(135deg, #fff 0%, var(--light-color) 40%, var(--kgi-blue) 100%);
             box-shadow: 0 0 20px var(--light-color);
-            transform: scale(1.15);
-            z-index: 10; /* 大樓發光層級 */
-            border: 1px solid #fff;
+            transform: scale(1.15); z-index: 10; border: 1px solid #fff;
         }
-
         .piece.active::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.95);
-            opacity: 0;
-            animation: flash 0.5s ease-out;
-            border-radius: 3px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95); opacity: 0; animation: flash 0.5s ease-out; border-radius: 3px;
         }
-
-        @keyframes flash {
-            0% { opacity: 1; transform: scale(1.3); }
-            100% { opacity: 0; transform: scale(1); }
-        }
+        @keyframes flash { 0% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0; transform: scale(1); } }
 
         .title {
-            font-size: 3.5rem;
-            margin-bottom: 25px;
-            color: #fff;
-            text-shadow: 0 0 25px var(--kgi-blue);
-            letter-spacing: 8px;
-            font-weight: bold;
-            z-index: 5;
+            font-size: 3rem; margin-bottom: 25px; color: #fff;
+            text-shadow: 0 0 25px var(--kgi-blue); letter-spacing: 8px; font-weight: bold; z-index: 5;
         }
-
         .slogan {
-            margin-top: 40px;
-            font-size: 2.2rem;
+            margin-top: 40px; font-size: 2rem;
             background: linear-gradient(90deg, #fff, var(--kgi-orange));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            opacity: 0;
-            transition: opacity 2s;
-            font-weight: bold;
-            z-index: 5;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            opacity: 0; transition: opacity 2s; font-weight: bold; z-index: 5;
         }
-
-        /* 連線狀態指示燈 */
+        
         .status-light {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 0.9rem;
-            color: #888;
-            display: flex;
-            align-items: center;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 10px;
-            border-radius: 20px;
-            z-index: 200; /* 最高層級確保可見 */
+            position: absolute; top: 20px; right: 20px; font-size: 0.9rem; color: #888;
+            display: flex; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; z-index: 200;
         }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; margin-right: 8px; transition: 0.3s; }
         .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
 
-        /* === 修改重點：彈幕容器設定 === */
         .marquee-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%; /* 佔滿全螢幕 */
-            overflow: hidden; 
-            pointer-events: none; /* 讓點擊穿透，不擋住下方元素 */
-            z-index: 100; /* [關鍵] 設為 100，保證浮在大樓(z-index:10)前面 */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; pointer-events: none; z-index: 100;
         }
-
         .marquee-item {
-            position: absolute;
-            white-space: nowrap;
-            font-size: 1.8rem; /* 字體稍微加大 */
-            color: rgba(255, 255, 255, 1);
-            text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--kgi-blue); /* 加強陰影讓文字在亮處也清楚 */
-            font-weight: bold;
-            bottom: -100px; /* 初始位置在螢幕外 */
-            padding: 12px 25px;
-            background: rgba(0, 50, 100, 0.7); /* 加深底色 */
-            border-radius: 50px;
-            /* 動畫改為 flyToTop */
-            animation: flyToTop 8s linear forwards; 
-            border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: absolute; white-space: nowrap; font-size: 1.8rem; color: #fff;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--kgi-blue);
+            font-weight: bold; bottom: -100px; padding: 12px 25px;
+            background: rgba(0, 50, 100, 0.7); border-radius: 50px;
+            animation: flyToTop 8s linear forwards;
+            border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
-
-        /* === 修改重點：彈幕動畫 === */
         @keyframes flyToTop {
-            0% { 
-                bottom: -100px; 
-                opacity: 0; 
-                transform: scale(0.8) translateX(0); 
-            }
-            5% { 
-                opacity: 1; 
-                transform: scale(1.05) translateX(0); 
-            }
-            10% { 
-                transform: scale(1) translateX(0); 
-            }
-            80% {
-                opacity: 1; 
-            }
-            100% { 
-                bottom: 110%; /* [關鍵] 讓它飄到螢幕高度的 110% 處，確保完全離開畫面 */
-                opacity: 0; 
-                transform: scale(1) translateX(20px); 
-            }
+            0% { bottom: -100px; opacity: 0; transform: scale(0.8); }
+            5% { opacity: 1; transform: scale(1.05); }
+            10% { transform: scale(1); }
+            80% { opacity: 1; }
+            100% { bottom: 110%; opacity: 0; transform: translateX(20px); }
         }
     </style>
 </head>
 <body>
 
-    <div class="screen-container">
-        <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線系統初始化...</span></div>
-        <div class="title">凱基永續．共築願景</div>
-        
-        <div class="building-wrapper">
-            <div class="building-grid" id="building"></div>
+    <div class="layout-wrapper">
+        <div class="main-display">
+            <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線系統初始化...</span></div>
+            <div class="title">凱基永續．共築願景</div>
+            
+            <div class="building-wrapper">
+                <div class="building-grid" id="building"></div>
+            </div>
+
+            <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
+            <div class="marquee-container" id="marqueeArea"></div>
         </div>
 
-        <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
-        
-        <div class="marquee-container" id="marqueeArea"></div>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📝 祝福紀錄</h2>
+            </div>
+            <div class="message-list" id="messageList">
+                </div>
+        </div>
     </div>
 
     <script>
-        // === 1. 大樓地圖設計 (90格版本) ===
-        // 1 = 玻璃, 0 = 空氣
+        // === 1. 大樓地圖設計 (90格) ===
         const buildingMap = [
             [0,0,1,0,0,0,1,0,0], 
             [0,0,1,1,0,1,1,0,0], 
@@ -239,7 +263,6 @@
                     }
                 });
             });
-            console.log("大樓建設完成，總格數：" + totalPieces);
         }
 
         function getRandomEmptyIndex() {
@@ -250,8 +273,36 @@
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
+        // === 新增：添加記錄到右側列表 ===
+        function addToSidebar(name, msg) {
+            const list = document.getElementById('messageList');
+            
+            // 建立卡片元素
+            const card = document.createElement('div');
+            card.classList.add('msg-card');
+            
+            // 取得目前時間
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            card.innerHTML = `
+                <div class="msg-name">
+                    ${name}
+                    <span class="msg-time">${timeStr}</span>
+                </div>
+                <div class="msg-content">${msg}</div>
+            `;
+
+            // 將新訊息插入到最上方
+            list.insertBefore(card, list.firstChild);
+        }
+
         // 接收到訊息時觸發
         function onMessageReceived(name, msg) {
+            // 1. 新增到右側列表 (即使大樓滿了也繼續紀錄)
+            addToSidebar(name, msg);
+
+            // 2. 處理大樓點亮邏輯
             if (filledCount >= totalPieces) return;
 
             const targetIndex = getRandomEmptyIndex();
@@ -271,22 +322,19 @@
         }
 
         function showMarquee(text) {
+            // 限制只在左側區域 (.main-display) 顯示，因 marquee-container 已被包在裡面
             const container = document.getElementById('marqueeArea');
             const el = document.createElement('div');
             el.classList.add('marquee-item');
             el.innerText = text;
             
-            // 隨機顏色
             const colors = ['#fff', '#ffd700', '#7df9ff', '#ffb74d'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
-            el.style.color = colors[Math.floor(Math.random() * colors.length)]; // 文字同色系
+            el.style.color = colors[Math.floor(Math.random() * colors.length)];
             
-            // 隨機水平位置 (範圍加大到 5% ~ 85%)
             el.style.left = (5 + Math.random() * 80) + '%';
             
             container.appendChild(el);
-            
-            // 8秒後 (與動畫時間一致) 移除元素
             setTimeout(() => { el.remove(); }, 8000);
         }
 
@@ -303,10 +351,10 @@
             });
         }
 
-        // === 2. MQTT 連線設定 (SSL 安全版) ===
+        // === MQTT 連線設定 (SSL) ===
         const broker = "broker.emqx.io";
-        const port = 8084; // SSL Port
-        const topic = "kgi_event_2025_live_demo"; // 請確認與手機端一致
+        const port = 8084;
+        const topic = "kgi_event_2025_live_demo"; // 確認 Topic 與手機端一致
         const clientID = "monitor_" + new Date().getTime();
 
         const client = new Paho.MQTT.Client(broker, port, clientID);
@@ -330,21 +378,19 @@
 
         function connectMQTT() {
             client.connect({
-                useSSL: true, 
+                useSSL: true,
                 onSuccess: function () {
                     console.log("MQTT 連線成功");
                     document.getElementById('statusDot').classList.add('online');
-                    document.getElementById('statusText').innerText = `連線就緒 (總目標: ${totalPieces})`;
+                    document.getElementById('statusText').innerText = `連線就緒 (目標: ${totalPieces}格)`;
                     client.subscribe(topic);
                 },
                 onFailure: function (e) {
                     console.log("連線失敗", e);
-                    document.getElementById('statusText').innerText = "連線失敗，請檢查網路";
                 }
             });
         }
 
-        // 啟動
         initBuilding();
         connectMQTT();
 
