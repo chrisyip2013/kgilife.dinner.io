@@ -27,6 +27,7 @@
 
         .screen-container {
             width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -41,16 +42,16 @@
             /* 地面反射效果 */
             border-bottom: 2px solid rgba(255,255,255,0.1); 
             box-shadow: 0 20px 50px rgba(0, 86, 179, 0.1); 
+            z-index: 5; /* 確保大樓在彈幕下方 */
         }
 
         .building-grid {
             display: grid;
-            gap: 3px; /* 格子間距微調 */
+            gap: 3px;
             margin: 0 auto;
         }
 
         .piece {
-            /* 因應格數變少 (90格)，放大單格尺寸讓視覺更飽滿 */
             width: 35px; 
             height: 35px;
             background-color: var(--glass-off);
@@ -69,7 +70,7 @@
         .piece.active {
             background: linear-gradient(135deg, #fff 0%, var(--light-color) 40%, var(--kgi-blue) 100%);
             box-shadow: 0 0 20px var(--light-color);
-            transform: scale(1.15); /* 點亮時稍微放大更多 */
+            transform: scale(1.15);
             z-index: 10;
             border: 1px solid #fff;
         }
@@ -96,6 +97,8 @@
             text-shadow: 0 0 25px var(--kgi-blue);
             letter-spacing: 8px;
             font-weight: bold;
+            z-index: 30; /* 標題在最上層 */
+            position: relative;
         }
 
         .slogan {
@@ -107,6 +110,8 @@
             opacity: 0;
             transition: opacity 2s;
             font-weight: bold;
+            z-index: 30;
+            position: relative;
         }
 
         /* 連線狀態指示燈 */
@@ -121,42 +126,65 @@
             background: rgba(0,0,0,0.5);
             padding: 5px 10px;
             border-radius: 20px;
+            z-index: 100;
         }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; margin-right: 8px; transition: 0.3s; }
         .dot.online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
 
-        /* 彈幕 */
+        /* === 修改後的彈幕區 (全螢幕覆蓋) === */
         .marquee-container {
             position: absolute;
-            bottom: 60px;
-            width: 95%;
-            height: 70px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; /* 全螢幕高度 */
             overflow: hidden;
             pointer-events: none;
+            z-index: 20; /* 確保層級比大樓高 (大樓是5~10) */
         }
 
         .marquee-item {
             position: absolute;
             white-space: nowrap;
-            font-size: 1.6rem;
+            font-size: 1.8rem; /* 字體稍微加大 */
             color: rgba(255, 255, 255, 0.98);
             text-shadow: 2px 2px 5px black;
             font-weight: bold;
-            bottom: -70px;
-            padding: 10px 20px;
-            background: rgba(0, 86, 179, 0.6); /* 藍色半透明底 */
+            
+            /* 初始位置在畫面下方之外 */
+            bottom: -100px; 
+            
+            padding: 12px 24px;
+            background: rgba(0, 50, 100, 0.7); /* 加深底色增加對比 */
             border-radius: 50px;
-            animation: floatUp 5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            
+            /* 調整動畫時間為 8秒，讓它飄慢一點 */
+            animation: floatUp 8s linear forwards; 
+            
             border: 1px solid rgba(255,255,255,0.4);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
+        /* === 修改後的動畫路徑 === */
         @keyframes floatUp {
-            0% { bottom: -70px; opacity: 0; transform: scale(0.8); }
-            10% { opacity: 1; transform: scale(1.05); }
-            15% { transform: scale(1); }
-            85% { opacity: 1; }
-            100% { bottom: 350px; opacity: 0; transform: translateY(-20px); }
+            0% { 
+                bottom: -100px; 
+                opacity: 0; 
+                transform: scale(0.8); 
+            }
+            5% { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
+            80% { 
+                opacity: 1; 
+            }
+            100% { 
+                /* 飄到螢幕高度的 85% 處才消失 */
+                bottom: 85%; 
+                opacity: 0; 
+                transform: translateY(-20px) scale(1.05); 
+            }
         }
     </style>
 </head>
@@ -171,27 +199,25 @@
         </div>
 
         <div class="slogan" id="finalSlogan">凝聚每一份祝福，點亮無限未來</div>
+        
         <div class="marquee-container" id="marqueeArea"></div>
     </div>
 
     <script>
-        // === 1. 大樓地圖設計 (90格版本) ===
-        // 設計邏輯：寬9格，高12格
-        // 1 = 玻璃, 0 = 空氣
+        // === 1. 大樓地圖 (90格版本) ===
         const buildingMap = [
-            [0,0,1,0,0,0,1,0,0], // Row 1: 雙天線 (2格)
-            [0,0,1,1,0,1,1,0,0], // Row 2: 塔頂加寬 (4格)
-            [0,1,1,1,0,1,1,1,0], // Row 3: 上層階梯 (6格)
-            [1,1,1,1,1,1,1,1,1], // Row 4: 主體開始 (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 5: (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 6: (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 7: (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 8: (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 9: (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 10: (9格)
-            [1,1,1,1,1,1,1,1,1], // Row 11: (9格)
-            [1,1,1,0,0,0,1,1,1]  // Row 12: 底部入口 (6格)
-            // 總計: 2+4+6 + (9*8) + 6 = 12 + 72 + 6 = 90格
+            [0,0,1,0,0,0,1,0,0],
+            [0,0,1,1,0,1,1,0,0], 
+            [0,1,1,1,0,1,1,1,0],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1],
+            [1,1,1,0,0,0,1,1,1] 
         ];
 
         let totalPieces = 0;
@@ -201,9 +227,7 @@
 
         function initBuilding() {
             building.innerHTML = '';
-            // 自動偵測寬度
             const cols = buildingMap[0].length;
-            // 必須與 CSS .piece 的 width 一致 (這裡設為 35px)
             building.style.gridTemplateColumns = `repeat(${cols}, 35px)`;
 
             buildingMap.forEach((row) => {
@@ -231,20 +255,15 @@
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        // 接收到訊息時觸發
         function onMessageReceived(name, msg) {
             if (filledCount >= totalPieces) return;
 
             const targetIndex = getRandomEmptyIndex();
             if (targetIndex !== -1) {
-                // 點亮效果
                 pieces[targetIndex].classList.add('active');
                 filledCount++;
-                
-                // 彈幕效果
                 showMarquee(`${name}：${msg}`);
 
-                // 完成判斷
                 if (filledCount === totalPieces) {
                     setTimeout(() => {
                         document.getElementById('finalSlogan').style.opacity = 1;
@@ -260,19 +279,19 @@
             el.classList.add('marquee-item');
             el.innerText = text;
             
-            // 隨機顏色
             const colors = ['#fff', '#ffd700', '#7df9ff'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
             
-            // 隨機水平位置 (避免全部重疊)
+            // 隨機水平位置 (10% ~ 80%)，避免貼邊
             el.style.left = (10 + Math.random() * 70) + '%';
             
             container.appendChild(el);
-            setTimeout(() => { el.remove(); }, 6000);
+            
+            // 動畫時間結束後移除 (配合 CSS 的 8秒)
+            setTimeout(() => { el.remove(); }, 8000);
         }
 
         function triggerCompletionEffect() {
-            // 波浪慶祝動畫
             pieces.forEach((p, i) => {
                 setTimeout(() => {
                     p.style.transform = 'scale(1.25)';
@@ -281,13 +300,13 @@
                         p.style.transform = 'scale(1.15)';
                         p.style.boxShadow = '0 0 20px var(--light-color)';
                     }, 300);
-                }, (i % 9) * 100 + (Math.floor(i / 9) * 50)); // 由左至右、由上而下的波浪
+                }, (i % 9) * 100 + (Math.floor(i / 9) * 50));
             });
         }
 
-        // === 2. MQTT 連線設定 (SSL 安全版) ===
+        // === MQTT 連線設定 (SSL 8084) ===
         const broker = "broker.emqx.io";
-        const port = 8084; // SSL Port
+        const port = 8084;
         const topic = "kgi_event_2025_live_demo"; // 需與手機端一致
         const clientID = "monitor_" + new Date().getTime();
 
@@ -301,7 +320,6 @@
         };
 
         client.onMessageArrived = function (message) {
-            console.log("收到訊息:" + message.payloadString);
             try {
                 const data = JSON.parse(message.payloadString);
                 onMessageReceived(data.name, data.msg);
@@ -312,7 +330,7 @@
 
         function connectMQTT() {
             client.connect({
-                useSSL: true, // 必填，GitHub Pages 需要
+                useSSL: true,
                 onSuccess: function () {
                     console.log("MQTT 連線成功");
                     document.getElementById('statusDot').classList.add('online');
@@ -321,15 +339,13 @@
                 },
                 onFailure: function (e) {
                     console.log("連線失敗", e);
-                    document.getElementById('statusText').innerText = "連線失敗，請檢查網路";
+                    document.getElementById('statusText').innerText = "連線失敗";
                 }
             });
         }
 
-        // 啟動
         initBuilding();
         connectMQTT();
-
     </script>
 </body>
 </html>
