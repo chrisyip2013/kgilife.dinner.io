@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景</title>
+    <title>凱基永續．共築願景 (VIP尊爵版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -13,10 +13,10 @@
             --kgi-orange: #ff6600;
             --neon-cyan: #00ffff;
             --neon-white: #ffffff;
+            --vip-gold: #ffd700; /* VIP 金色 */
             --sidebar-bg: rgba(3, 10, 20, 0.9);
             
-            /* [關鍵修改] 80格專用尺寸：
-               11層樓 * 8.2 = 90.2% 高度，完美撐滿畫面 */
+            /* 80格極限尺寸 */
             --grid-size: min(8.2vh, 8.2vw); 
         }
 
@@ -29,7 +29,6 @@
             overflow: hidden;
         }
 
-        /* === 全螢幕震動 === */
         .screen-shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
             transform: translate3d(0, 0, 0);
@@ -48,13 +47,9 @@
             z-index: 1; overflow: hidden; pointer-events: none;
         }
         .warp-star {
-            position: absolute;
-            width: 4px; height: 4px; /* 配合大格子，星星也加大 */
-            background: var(--neon-cyan);
-            border-radius: 50%; opacity: 0;
-            box-shadow: 0 0 10px var(--neon-cyan);
-            animation: warpSpeed var(--duration) linear infinite;
-            animation-delay: var(--delay);
+            position: absolute; width: 4px; height: 4px; background: var(--neon-cyan);
+            border-radius: 50%; opacity: 0; box-shadow: 0 0 10px var(--neon-cyan);
+            animation: warpSpeed var(--duration) linear infinite; animation-delay: var(--delay);
         }
         @keyframes warpSpeed {
             0% { opacity: 0; transform: translateY(0) scale(0.5); }
@@ -63,34 +58,23 @@
         }
 
         .layout-wrapper {
-            display: flex; width: 100%; height: 100%;
-            position: relative; z-index: 10;
+            display: flex; width: 100%; height: 100%; position: relative; z-index: 10;
         }
 
-        /* === 左側主顯示區 === */
         .main-display {
             flex: 3; position: relative;
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            background-image: 
-                linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%),
-                radial-gradient(transparent, black);
+            display: flex; justify-content: center; align-items: center; 
+            background-image: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%), radial-gradient(transparent, black);
             background-size: 10px 10px, 100% 100%;
-            
-            perspective: 1200px; /* 透視感增強 */
-            perspective-origin: 50% 90%; 
+            perspective: 1200px; perspective-origin: 50% 90%; 
         }
 
         .title {
-            position: absolute; top: 15px;
-            width: 100%; text-align: center;
-            font-size: 3.8rem; 
-            color: var(--neon-white);
+            position: absolute; top: 15px; width: 100%; text-align: center;
+            font-size: 3.8rem; color: var(--neon-white);
             text-shadow: 0 0 10px var(--neon-cyan), 0 0 30px var(--kgi-bright-blue), 0 0 70px var(--kgi-bright-blue);
             letter-spacing: 12px; font-weight: 900; z-index: 20;
-            animation: titlePulse 2s infinite alternate;
-            pointer-events: none;
+            animation: titlePulse 2s infinite alternate; pointer-events: none;
         }
         @keyframes titlePulse {
             from { filter: brightness(1); text-shadow: 0 0 20px var(--kgi-bright-blue); }
@@ -98,30 +82,21 @@
         }
 
         .slogan {
-            position: absolute; bottom: 25px;
-            width: 100%; text-align: center;
-            font-size: 2.5rem; 
-            font-weight: bold; z-index: 20;
-            color: var(--neon-white);
-            text-shadow: 0 0 20px var(--kgi-orange);
-            opacity: 0; transition: opacity 1s;
-            pointer-events: none;
+            position: absolute; bottom: 25px; width: 100%; text-align: center;
+            font-size: 2.5rem; font-weight: bold; z-index: 20;
+            color: var(--neon-white); text-shadow: 0 0 20px var(--kgi-orange);
+            opacity: 0; transition: opacity 1s; pointer-events: none;
         }
 
-        /* === 大樓容器 === */
         .building-wrapper {
-            position: relative; 
-            padding: 0; border: none; box-shadow: none;
-            z-index: 10;
-            /* 調整角度與位置，確保大格子不切邊 */
-            transform: rotateX(15deg) translateY(-10px); 
-            transform-style: preserve-3d;
+            position: relative; padding: 0; border: none; box-shadow: none; z-index: 10;
+            transform: rotateX(15deg) translateY(-10px); transform-style: preserve-3d;
             display: flex; justify-content: center; align-items: center;
         }
 
         .building-grid { display: grid; gap: 0.5vh; margin: 0 auto; }
 
-        /* === 格子樣式 === */
+        /* === 一般格子 === */
         .piece {
             width: var(--grid-size); height: var(--grid-size);
             background-color: rgba(0, 15, 30, 0.6);
@@ -131,56 +106,60 @@
             animation: unstableEnergy 0.8s infinite alternate steps(5);
             transition: transform 0.3s;
         }
-        .piece:nth-child(odd) { animation-delay: 0.2s; }
-        .piece:nth-child(3n) { animation-duration: 1.2s; }
-        .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
-
+        .piece:nth-child(odd) { animation-delay: 0.2s; } .piece:nth-child(3n) { animation-duration: 1.2s; } .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
         @keyframes unstableEnergy {
             0% { border-color: rgba(0, 150, 255, 0.2); }
             100% { border-color: rgba(0, 255, 255, 0.4); box-shadow: inset 0 0 10px var(--kgi-bright-blue); }
         }
-        
         .spacer { width: var(--grid-size); height: var(--grid-size); background: transparent; pointer-events: none; }
 
-        /* === 激活狀態 === */
+        /* === [關鍵] VIP 星星樣式 === */
+        .piece.vip-star {
+            /* 預設為暗金色 */
+            background-color: rgba(60, 50, 0, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            /* 裁切成星星形狀 */
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            box-shadow: none; /* clip-path 會裁切 shadow，改用 drop-shadow 或內部光 */
+            transform: scale(1.1); /* 星星稍微大一點 */
+        }
+
+        /* === 一般格子激活 === */
         .piece.active {
             background: var(--neon-white) !important;
             border: 2px solid var(--neon-white) !important;
-            box-shadow: 
-                0 0 30px var(--neon-cyan), 
-                0 0 60px var(--kgi-bright-blue), 
-                0 0 100px var(--kgi-bright-blue),
-                0 0 150px var(--neon-cyan) !important;
-            z-index: 100;
-            /* 配合大尺寸，凸起更明顯 */
-            transform: scale(1.1) translateZ(6vh); 
+            box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px var(--kgi-bright-blue), 0 0 100px var(--kgi-bright-blue) !important;
+            z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
         }
-        @keyframes activePlasma {
-             from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); }
+
+        /* === [關鍵] VIP 星星激活狀態 (金色光芒) === */
+        .piece.vip-star.active {
+            background: #fff !important; /* 核心白亮 */
+            /* 金色光暈 */
+            filter: drop-shadow(0 0 10px var(--vip-gold)) drop-shadow(0 0 30px var(--vip-gold)) drop-shadow(0 0 50px orange);
+            z-index: 150;
+            transform: scale(1.5) translateZ(10vh); /* 更突出 */
+            animation: starPulse 1s infinite alternate !important;
         }
+        @keyframes starPulse { from { filter: drop-shadow(0 0 20px var(--vip-gold)); } to { filter: drop-shadow(0 0 50px var(--vip-gold)) drop-shadow(0 0 80px white); } }
+        @keyframes activePlasma { from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); } }
 
         /* === 爆炸特效 === */
         .explosion-particle {
-            position: absolute; width: 12px; height: 12px;
-            background: var(--neon-white); border-radius: 50%;
+            position: absolute; width: 12px; height: 12px; background: var(--neon-white); border-radius: 50%;
             box-shadow: 0 0 20px var(--color); pointer-events: none; z-index: 9999;
         }
         .massive-shockwave {
-            position: absolute; width: 0; height: 0;
-            border-radius: 50%; background: transparent;
-            border: 50px solid var(--neon-white);
-            box-shadow: 0 0 120px var(--neon-cyan), inset 0 0 120px var(--neon-cyan);
+            position: absolute; width: 0; height: 0; border-radius: 50%; background: transparent;
+            border: 50px solid var(--neon-white); box-shadow: 0 0 120px var(--neon-cyan), inset 0 0 120px var(--neon-cyan);
             opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998;
         }
 
         /* === 右側側邊欄 === */
         .sidebar {
-            flex: 1; background: rgba(5, 15, 30, 0.85);
-            border-left: 3px solid var(--kgi-bright-blue);
-            box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2);
-            display: flex; flex-direction: column; z-index: 50;
-            backdrop-filter: blur(20px);
+            flex: 1; background: rgba(5, 15, 30, 0.85); border-left: 3px solid var(--kgi-bright-blue);
+            box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2); display: flex; flex-direction: column; z-index: 50; backdrop-filter: blur(20px);
         }
         .sidebar-header {
             padding: 25px; background: linear-gradient(90deg, var(--kgi-blue), transparent);
@@ -211,10 +190,8 @@
         .msg-content { font-size: 1.2rem; text-shadow: 1px 1px 2px black; }
 
         .status-light {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(0, 0, 0, 0.8); border: 2px solid var(--neon-cyan);
-            padding: 10px 20px; border-radius: 30px; z-index: 200;
-            box-shadow: 0 0 20px var(--neon-cyan); font-weight: bold;
+            position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--neon-cyan);
+            padding: 10px 20px; border-radius: 30px; z-index: 200; box-shadow: 0 0 20px var(--neon-cyan); font-weight: bold;
         }
         .dot.online { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
@@ -222,8 +199,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 100;
         }
         .marquee-item {
-            position: absolute; white-space: nowrap; font-size: 3rem; /* 彈幕字體也加大 */
-            color: #fff;
+            position: absolute; white-space: nowrap; font-size: 3rem; color: #fff;
             text-shadow: 0 0 15px var(--kgi-bright-blue), 0 0 30px var(--neon-cyan);
             font-weight: 900; bottom: -100px; padding: 25px 50px;
             background: linear-gradient(90deg, var(--kgi-blue), #000); 
@@ -278,16 +254,9 @@
         }
         createWarpStars();
 
-        // === [關鍵修改] 80格地圖矩陣 (9欄 x 11列) ===
-        // 設計邏輯：
-        // R1: 000101000 (2) 天線
-        // R2: 001101100 (4) 塔頂
-        // R3: 011101110 (6) 肩膀
-        // R4-R10: 111111111 (9*7=63) 主體
-        // R11: 011010110 (5) 底部入口
-        // 總計: 2+4+6+63+5 = 80格
+        // === [地圖邏輯] 0=空, 1=普通格, 2=VIP星星 ===
         const buildingMap = [
-            [0,0,0,1,0,1,0,0,0], 
+            [0,0,0,2,0,2,0,0,0], // Row 1: 兩個 2 是天線頂端的星星 (VIP)
             [0,0,1,1,0,1,1,0,0], 
             [0,1,1,1,0,1,1,1,0], 
             [1,1,1,1,1,1,1,1,1], 
@@ -314,22 +283,48 @@
                 row.forEach((cell) => {
                     const div = document.createElement('div');
                     if (cell === 1) {
-                        div.classList.add('piece'); pieces.push(div); building.appendChild(div); totalPieces++;
+                        div.classList.add('piece'); 
+                        pieces.push(div); building.appendChild(div); totalPieces++;
+                    } else if (cell === 2) {
+                        // VIP 星星邏輯
+                        div.classList.add('piece', 'vip-star'); 
+                        // 標記為 vip，getRandomEmptyIndex 會自動過濾它
+                        div.dataset.vip = "true"; 
+                        pieces.push(div); building.appendChild(div); totalPieces++;
                     } else {
                         div.classList.add('spacer'); building.appendChild(div);
                     }
                 });
             });
-            console.log("Total Pieces Generated:", totalPieces); // 確認為 80
+            console.log("Total Pieces:", totalPieces);
         }
 
+        // === 隨機取得空格 (自動過濾掉 VIP 格子) ===
         function getRandomEmptyIndex() {
-            const emptyIndices = pieces.map((p, index) => p.classList.contains('active') ? -1 : index).filter(index => index !== -1);
+            const emptyIndices = pieces.map((p, index) => {
+                // 如果已經點亮，或它是 VIP 格子，就不能被一般隨機選中
+                if (p.classList.contains('active') || p.dataset.vip === "true") return -1;
+                return index;
+            }).filter(index => index !== -1);
+
             if (emptyIndices.length === 0) return -1;
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        function triggerEnergyExplosion(targetElement) {
+        // === 取得 VIP 空格 (專供長官使用) ===
+        function getVipEmptyIndex() {
+            const vipIndices = pieces.map((p, index) => {
+                // 找出是 VIP 且還沒亮起的
+                if (p.dataset.vip === "true" && !p.classList.contains('active')) return index;
+                return -1;
+            }).filter(index => index !== -1);
+            
+            if (vipIndices.length === 0) return -1;
+            // 優先填左邊的星星，再填右邊
+            return vipIndices[0]; 
+        }
+
+        function triggerEnergyExplosion(targetElement, isVip = false) {
             const rect = targetElement.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
@@ -339,10 +334,16 @@
             document.body.classList.add('screen-shake');
             setTimeout(() => document.body.classList.remove('screen-shake'), 500);
 
+            // VIP 使用金色衝擊波，一般人使用白色/青色
+            const shockwaveColor = isVip ? '#ffd700' : '#ffffff';
+            const shockwaveShadow = isVip ? 'orange' : 'var(--neon-cyan)';
+
             const shockwave = document.createElement('div');
             shockwave.classList.add('massive-shockwave');
             shockwave.style.left = centerX + 'px';
             shockwave.style.top = centerY + 'px';
+            shockwave.style.borderColor = shockwaveColor;
+            shockwave.style.boxShadow = `0 0 120px ${shockwaveShadow}, inset 0 0 120px ${shockwaveShadow}`;
             document.body.appendChild(shockwave);
             
             shockwave.animate([
@@ -350,8 +351,9 @@
                 { width: '2500px', height: '2500px', opacity: 0, borderWidth: '0px' }
             ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
-            const particleCount = 50; 
-            const colors = ['#00ffff', '#ffffff', '#0080ff', '#ff6600'];
+            const particleCount = isVip ? 80 : 50; // VIP 粒子更多
+            const colors = isVip ? ['#ffd700', '#ffcc00', '#ffffff'] : ['#00ffff', '#ffffff', '#0080ff', '#ff6600'];
+            
             for (let i = 0; i < particleCount; i++) {
                 const p = document.createElement('div');
                 p.classList.add('explosion-particle');
@@ -387,13 +389,28 @@
         function onMessageReceived(name, msg) {
             addToSidebar(name, msg);
             if (filledCount >= totalPieces) return;
-            const targetIndex = getRandomEmptyIndex();
+
+            // === [關鍵邏輯] 判斷是否為長官 ===
+            const isVipUser = name.includes("董事長") || name.includes("總經理");
+            let targetIndex = -1;
+
+            if (isVipUser) {
+                // 如果是長官，優先找星星的位置
+                targetIndex = getVipEmptyIndex();
+                // 如果星星都滿了，則找一般位置 (避免長官沒地方填)
+                if (targetIndex === -1) targetIndex = getRandomEmptyIndex();
+            } else {
+                // 一般人，只能找一般位置 (星星會被避開)
+                targetIndex = getRandomEmptyIndex();
+            }
+
             if (targetIndex !== -1) {
                 const targetPiece = pieces[targetIndex];
                 targetPiece.classList.add('active');
                 filledCount++;
                 
-                triggerEnergyExplosion(targetPiece);
+                // 傳入是否為 VIP 旗標，決定爆炸特效顏色
+                triggerEnergyExplosion(targetPiece, isVipUser);
                 showMarquee(`${name}：${msg}`);
 
                 if (filledCount === totalPieces) {
@@ -440,7 +457,7 @@
         client.onConnectionLost = function (res) { document.getElementById('statusDot').classList.remove('online'); document.getElementById('statusText').innerText = "連線中斷..."; setTimeout(connectMQTT, 2000); };
         client.onMessageArrived = function (msg) { try { const data = JSON.parse(msg.payloadString); onMessageReceived(data.name, data.msg); } catch (e) {} };
         function connectMQTT() {
-            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒 (${totalPieces}格)`; client.subscribe(topic); }, onFailure: function () {} });
+            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒`; client.subscribe(topic); }, onFailure: function () {} });
         }
         initBuilding(); connectMQTT();
     </script>
