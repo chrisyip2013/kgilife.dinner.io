@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (VIP尊爵版)</title>
+    <title>凱基永續．共築願景</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -13,9 +13,8 @@
             --kgi-orange: #ff6600;
             --neon-cyan: #00ffff;
             --neon-white: #ffffff;
-            --vip-gold: #ffd700; /* VIP 金色 */
+            --vip-gold: #ffd700;
             --sidebar-bg: rgba(3, 10, 20, 0.9);
-            
             /* 80格極限尺寸 */
             --grid-size: min(8.2vh, 8.2vw); 
         }
@@ -25,10 +24,10 @@
             background-color: var(--bg-color);
             color: white;
             font-family: "Microsoft JhengHei", sans-serif;
-            height: 100vh; 
-            overflow: hidden;
+            height: 100vh; overflow: hidden;
         }
 
+        /* === 全螢幕震動 === */
         .screen-shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
             transform: translate3d(0, 0, 0);
@@ -57,9 +56,7 @@
             100% { opacity: 0; transform: translateY(-100vh) scale(5); height: 100px; }
         }
 
-        .layout-wrapper {
-            display: flex; width: 100%; height: 100%; position: relative; z-index: 10;
-        }
+        .layout-wrapper { display: flex; width: 100%; height: 100%; position: relative; z-index: 10; }
 
         .main-display {
             flex: 3; position: relative;
@@ -96,7 +93,6 @@
 
         .building-grid { display: grid; gap: 0.5vh; margin: 0 auto; }
 
-        /* === 一般格子 === */
         .piece {
             width: var(--grid-size); height: var(--grid-size);
             background-color: rgba(0, 15, 30, 0.6);
@@ -113,39 +109,30 @@
         }
         .spacer { width: var(--grid-size); height: var(--grid-size); background: transparent; pointer-events: none; }
 
-        /* === [關鍵] VIP 星星樣式 === */
+        /* VIP 星星 */
         .piece.vip-star {
-            /* 預設為暗金色 */
-            background-color: rgba(60, 50, 0, 0.8);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            /* 裁切成星星形狀 */
+            background-color: rgba(60, 50, 0, 0.8); border: 1px solid rgba(255, 215, 0, 0.3);
             clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            box-shadow: none; /* clip-path 會裁切 shadow，改用 drop-shadow 或內部光 */
-            transform: scale(1.1); /* 星星稍微大一點 */
+            box-shadow: none; transform: scale(1.1);
         }
 
-        /* === 一般格子激活 === */
+        /* 激活狀態 */
         .piece.active {
-            background: var(--neon-white) !important;
-            border: 2px solid var(--neon-white) !important;
+            background: var(--neon-white) !important; border: 2px solid var(--neon-white) !important;
             box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px var(--kgi-bright-blue), 0 0 100px var(--kgi-bright-blue) !important;
             z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
         }
-
-        /* === [關鍵] VIP 星星激活狀態 (金色光芒) === */
         .piece.vip-star.active {
-            background: #fff !important; /* 核心白亮 */
-            /* 金色光暈 */
+            background: #fff !important; 
             filter: drop-shadow(0 0 10px var(--vip-gold)) drop-shadow(0 0 30px var(--vip-gold)) drop-shadow(0 0 50px orange);
-            z-index: 150;
-            transform: scale(1.5) translateZ(10vh); /* 更突出 */
+            z-index: 150; transform: scale(1.5) translateZ(10vh);
             animation: starPulse 1s infinite alternate !important;
         }
         @keyframes starPulse { from { filter: drop-shadow(0 0 20px var(--vip-gold)); } to { filter: drop-shadow(0 0 50px var(--vip-gold)) drop-shadow(0 0 80px white); } }
         @keyframes activePlasma { from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); } }
 
-        /* === 爆炸特效 === */
+        /* 特效 */
         .explosion-particle {
             position: absolute; width: 12px; height: 12px; background: var(--neon-white); border-radius: 50%;
             box-shadow: 0 0 20px var(--color); pointer-events: none; z-index: 9999;
@@ -156,14 +143,14 @@
             opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998;
         }
 
-        /* === 右側側邊欄 === */
+        /* 側邊欄 */
         .sidebar {
             flex: 1; background: rgba(5, 15, 30, 0.85); border-left: 3px solid var(--kgi-bright-blue);
             box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2); display: flex; flex-direction: column; z-index: 50; backdrop-filter: blur(20px);
         }
         .sidebar-header {
             padding: 25px; background: linear-gradient(90deg, var(--kgi-blue), transparent);
-            border-bottom: 2px solid var(--neon-cyan); text-align: center;
+            border-bottom: 2px solid var(--neon-cyan); text-align: center; cursor: pointer; user-select: none;
         }
         .sidebar-header h2 {
             margin: 0; color: var(--neon-white); font-size: 1.8rem; letter-spacing: 3px;
@@ -233,8 +220,8 @@
         </div>
 
         <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>⚡ 即時能量祝願 ⚡</h2>
+            <div class="sidebar-header" onclick="manualDownloadBackup()">
+                <h2 title="連續點擊三次可強制備份下載">⚡ 即時能量祝願 ⚡</h2>
             </div>
             <div class="message-list" id="messageList"></div>
         </div>
@@ -254,9 +241,8 @@
         }
         createWarpStars();
 
-        // === [地圖邏輯] 0=空, 1=普通格, 2=VIP星星 ===
         const buildingMap = [
-            [0,0,0,2,0,2,0,0,0], // Row 1: 兩個 2 是天線頂端的星星 (VIP)
+            [0,0,0,2,0,2,0,0,0], 
             [0,0,1,1,0,1,1,0,0], 
             [0,1,1,1,0,1,1,1,0], 
             [1,1,1,1,1,1,1,1,1], 
@@ -265,14 +251,20 @@
             [1,1,1,1,1,1,1,1,1], 
             [1,1,1,1,1,1,1,1,1], 
             [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,0,1,1,1,1], 
-            [1,1,1,0,0,0,1,1,1]
+            [1,1,1,1,1,1,1,1,1], 
+            [0,1,1,0,1,0,1,1,0]
         ];
         
         let totalPieces = 0;
         let filledCount = 0;
         const building = document.getElementById('building');
         const pieces = [];
+        
+        // === [新增] 紀錄管理 ===
+        const blessingHistory = []; // 儲存所有留言資料
+        let vipStatus = { chairman: false, gm: false }; // 紀錄 VIP 是否已發言
+        let hasAutoDownloaded = false; // 防止重複下載
+        let clickCount = 0; // 手動下載計數器
 
         function initBuilding() {
             building.innerHTML = '';
@@ -286,9 +278,7 @@
                         div.classList.add('piece'); 
                         pieces.push(div); building.appendChild(div); totalPieces++;
                     } else if (cell === 2) {
-                        // VIP 星星邏輯
                         div.classList.add('piece', 'vip-star'); 
-                        // 標記為 vip，getRandomEmptyIndex 會自動過濾它
                         div.dataset.vip = "true"; 
                         pieces.push(div); building.appendChild(div); totalPieces++;
                     } else {
@@ -296,31 +286,23 @@
                     }
                 });
             });
-            console.log("Total Pieces:", totalPieces);
         }
 
-        // === 隨機取得空格 (自動過濾掉 VIP 格子) ===
         function getRandomEmptyIndex() {
             const emptyIndices = pieces.map((p, index) => {
-                // 如果已經點亮，或它是 VIP 格子，就不能被一般隨機選中
                 if (p.classList.contains('active') || p.dataset.vip === "true") return -1;
                 return index;
             }).filter(index => index !== -1);
-
             if (emptyIndices.length === 0) return -1;
             return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
         }
 
-        // === 取得 VIP 空格 (專供長官使用) ===
         function getVipEmptyIndex() {
             const vipIndices = pieces.map((p, index) => {
-                // 找出是 VIP 且還沒亮起的
                 if (p.dataset.vip === "true" && !p.classList.contains('active')) return index;
                 return -1;
             }).filter(index => index !== -1);
-            
             if (vipIndices.length === 0) return -1;
-            // 優先填左邊的星星，再填右邊
             return vipIndices[0]; 
         }
 
@@ -334,7 +316,6 @@
             document.body.classList.add('screen-shake');
             setTimeout(() => document.body.classList.remove('screen-shake'), 500);
 
-            // VIP 使用金色衝擊波，一般人使用白色/青色
             const shockwaveColor = isVip ? '#ffd700' : '#ffffff';
             const shockwaveShadow = isVip ? 'orange' : 'var(--neon-cyan)';
 
@@ -351,7 +332,7 @@
                 { width: '2500px', height: '2500px', opacity: 0, borderWidth: '0px' }
             ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
-            const particleCount = isVip ? 80 : 50; // VIP 粒子更多
+            const particleCount = isVip ? 80 : 50; 
             const colors = isVip ? ['#ffd700', '#ffcc00', '#ffffff'] : ['#00ffff', '#ffffff', '#0080ff', '#ff6600'];
             
             for (let i = 0; i < particleCount; i++) {
@@ -381,26 +362,87 @@
             const card = document.createElement('div');
             card.classList.add('msg-card');
             const now = new Date();
-            card.innerHTML = `<div class="msg-name">${name}<span class="msg-time">${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}</span></div><div class="msg-content">${msg}</div>`;
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            card.innerHTML = `<div class="msg-name">${name}<span class="msg-time">${timeStr}</span></div><div class="msg-content">${msg}</div>`;
             list.insertBefore(card, list.firstChild);
-            if (list.children.length > 50) list.removeChild(list.lastChild);
+            // 讓列表保持所有記錄，不刪除舊的，方便老闆最後檢查
+            // if (list.children.length > 50) list.removeChild(list.lastChild); 
+        }
+
+        // === [新增] 匯出 CSV 功能 ===
+        function exportToCSV() {
+            if (blessingHistory.length === 0) {
+                alert("目前沒有任何祝福留言喔！");
+                return;
+            }
+
+            // CSV 標頭
+            let csvContent = "\uFEFF發送時間,姓名/單位,祝福內容\n";
+            
+            blessingHistory.forEach(item => {
+                // 處理內容中可能包含的逗號
+                const cleanName = item.name.replace(/,/g, "，");
+                const cleanMsg = item.msg.replace(/,/g, "，");
+                csvContent += `${item.time},${cleanName},${cleanMsg}\n`;
+            });
+
+            // 建立下載連結
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+            link.setAttribute("download", `KGI_祝福紀錄_${timestamp}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            console.log("已自動備份留言紀錄");
+        }
+
+        // === [新增] 手動強制下載 (隱藏功能) ===
+        function manualDownloadBackup() {
+            clickCount++;
+            if (clickCount === 3) {
+                const check = confirm("是否強制下載目前的祝福紀錄？");
+                if (check) exportToCSV();
+                clickCount = 0;
+            }
+            // 2秒後重置計數器
+            setTimeout(() => { clickCount = 0; }, 2000);
         }
 
         function onMessageReceived(name, msg) {
+            // 1. 存入歷史紀錄
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+            blessingHistory.push({ time: timeStr, name: name, msg: msg });
+            
+            // 2. 更新側邊欄
             addToSidebar(name, msg);
+
+            // 3. 檢查是否觸發自動下載
+            if (name.includes("董事長")) vipStatus.chairman = true;
+            if (name.includes("總經理")) vipStatus.gm = true;
+
+            // 如果兩位長官都講過話，且還沒自動下載過，就觸發
+            if (vipStatus.chairman && vipStatus.gm && !hasAutoDownloaded) {
+                setTimeout(() => {
+                    exportToCSV();
+                    hasAutoDownloaded = true;
+                }, 3000); // 延遲3秒，讓長官的彈幕先跑出來再跳下載視窗
+            }
+
+            // 4. 點亮大樓邏輯
             if (filledCount >= totalPieces) return;
 
-            // === [關鍵邏輯] 判斷是否為長官 ===
             const isVipUser = name.includes("董事長") || name.includes("總經理");
             let targetIndex = -1;
 
             if (isVipUser) {
-                // 如果是長官，優先找星星的位置
                 targetIndex = getVipEmptyIndex();
-                // 如果星星都滿了，則找一般位置 (避免長官沒地方填)
                 if (targetIndex === -1) targetIndex = getRandomEmptyIndex();
             } else {
-                // 一般人，只能找一般位置 (星星會被避開)
                 targetIndex = getRandomEmptyIndex();
             }
 
@@ -409,7 +451,6 @@
                 targetPiece.classList.add('active');
                 filledCount++;
                 
-                // 傳入是否為 VIP 旗標，決定爆炸特效顏色
                 triggerEnergyExplosion(targetPiece, isVipUser);
                 showMarquee(`${name}：${msg}`);
 
@@ -457,10 +498,9 @@
         client.onConnectionLost = function (res) { document.getElementById('statusDot').classList.remove('online'); document.getElementById('statusText').innerText = "連線中斷..."; setTimeout(connectMQTT, 2000); };
         client.onMessageArrived = function (msg) { try { const data = JSON.parse(msg.payloadString); onMessageReceived(data.name, data.msg); } catch (e) {} };
         function connectMQTT() {
-            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒`; client.subscribe(topic); }, onFailure: function () {} });
+            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒 (${totalPieces}格)`; client.subscribe(topic); }, onFailure: function () {} });
         }
         initBuilding(); connectMQTT();
     </script>
 </body>
 </html>
-
