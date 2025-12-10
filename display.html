@@ -3,17 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景</title>
+    <title>凱基永續．共築願景 (繽紛循環版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
             --bg-color: #000510;
-            --kgi-blue: #004a99;
-            --kgi-bright-blue: #0080ff;
-            --kgi-orange: #ff6600;
             --neon-cyan: #00ffff;
-            --neon-white: #ffffff;
-            --vip-gold: #ffd700;
             --sidebar-bg: rgba(3, 10, 20, 0.9);
             /* 80格極限尺寸 */
             --grid-size: min(8.2vh, 8.2vw); 
@@ -68,20 +63,20 @@
 
         .title {
             position: absolute; top: 15px; width: 100%; text-align: center;
-            font-size: 3.8rem; color: var(--neon-white);
-            text-shadow: 0 0 10px var(--neon-cyan), 0 0 30px var(--kgi-bright-blue), 0 0 70px var(--kgi-bright-blue);
+            font-size: 3.8rem; color: #ffffff;
+            text-shadow: 0 0 10px #00ffff, 0 0 30px #0080ff, 0 0 70px #0080ff;
             letter-spacing: 12px; font-weight: 900; z-index: 20;
             animation: titlePulse 2s infinite alternate; pointer-events: none;
         }
         @keyframes titlePulse {
-            from { filter: brightness(1); text-shadow: 0 0 20px var(--kgi-bright-blue); }
-            to { filter: brightness(1.3); text-shadow: 0 0 50px var(--neon-cyan), 0 0 100px var(--neon-white); }
+            from { filter: brightness(1); text-shadow: 0 0 20px #0080ff; }
+            to { filter: brightness(1.3); text-shadow: 0 0 50px #00ffff, 0 0 100px #ffffff; }
         }
 
         .slogan {
             position: absolute; bottom: 25px; width: 100%; text-align: center;
             font-size: 2.5rem; font-weight: bold; z-index: 20;
-            color: var(--neon-white); text-shadow: 0 0 20px var(--kgi-orange);
+            color: #ffffff; text-shadow: 0 0 20px #ff6600;
             opacity: 0; transition: opacity 1s; pointer-events: none;
         }
 
@@ -105,7 +100,7 @@
         .piece:nth-child(odd) { animation-delay: 0.2s; } .piece:nth-child(3n) { animation-duration: 1.2s; } .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
         @keyframes unstableEnergy {
             0% { border-color: rgba(0, 150, 255, 0.2); }
-            100% { border-color: rgba(0, 255, 255, 0.4); box-shadow: inset 0 0 10px var(--kgi-bright-blue); }
+            100% { border-color: rgba(0, 255, 255, 0.4); box-shadow: inset 0 0 10px #0080ff; }
         }
         .spacer { width: var(--grid-size); height: var(--grid-size); background: transparent; pointer-events: none; }
 
@@ -116,50 +111,74 @@
             box-shadow: none; transform: scale(1.1);
         }
 
-        /* 激活狀態 */
+        /* === 激活狀態通用 === */
         .piece.active {
-            background: var(--neon-white) !important; border: 2px solid var(--neon-white) !important;
-            box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px var(--kgi-bright-blue), 0 0 100px var(--kgi-bright-blue) !important;
             z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
+            border-width: 2px !important;
+            border-style: solid !important;
         }
+
+        /* === 四色循環樣式 === */
+        /* 1. 藍色 */
+        .piece.active.c-blue {
+            background: #ffffff !important; border-color: #ffffff !important;
+            box-shadow: 0 0 30px #00ffff, 0 0 60px #0080ff, 0 0 100px #0080ff !important;
+        }
+        /* 2. 白色 (純淨光) */
+        .piece.active.c-white {
+            background: #ffffff !important; border-color: #ffffff !important;
+            box-shadow: 0 0 30px #ffffff, 0 0 60px #cccccc, 0 0 100px #ffffff !important;
+        }
+        /* 3. 橘色 */
+        .piece.active.c-orange {
+            background: #ffffff !important; border-color: #ffffff !important;
+            box-shadow: 0 0 30px #ffcc00, 0 0 60px #ff6600, 0 0 100px #ff4500 !important;
+        }
+        /* 4. 綠色 */
+        .piece.active.c-green {
+            background: #ffffff !important; border-color: #ffffff !important;
+            box-shadow: 0 0 30px #00ff00, 0 0 60px #32cd32, 0 0 100px #006400 !important;
+        }
+
+        /* VIP 星星激活 */
         .piece.vip-star.active {
             background: #fff !important; 
-            filter: drop-shadow(0 0 10px var(--vip-gold)) drop-shadow(0 0 30px var(--vip-gold)) drop-shadow(0 0 50px orange);
+            filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 30px #ffd700) drop-shadow(0 0 50px orange);
             z-index: 150; transform: scale(1.5) translateZ(10vh);
             animation: starPulse 1s infinite alternate !important;
         }
-        @keyframes starPulse { from { filter: drop-shadow(0 0 20px var(--vip-gold)); } to { filter: drop-shadow(0 0 50px var(--vip-gold)) drop-shadow(0 0 80px white); } }
+        @keyframes starPulse { from { filter: drop-shadow(0 0 20px #ffd700); } to { filter: drop-shadow(0 0 50px #ffd700) drop-shadow(0 0 80px white); } }
         @keyframes activePlasma { from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); } }
 
         /* 特效 */
         .explosion-particle {
-            position: absolute; width: 12px; height: 12px; background: var(--neon-white); border-radius: 50%;
+            position: absolute; width: 12px; height: 12px; background: #ffffff; border-radius: 50%;
             box-shadow: 0 0 20px var(--color); pointer-events: none; z-index: 9999;
         }
         .massive-shockwave {
             position: absolute; width: 0; height: 0; border-radius: 50%; background: transparent;
-            border: 50px solid var(--neon-white); box-shadow: 0 0 120px var(--neon-cyan), inset 0 0 120px var(--neon-cyan);
+            border: 50px solid #ffffff; 
             opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998;
         }
 
         /* 側邊欄 */
         .sidebar {
-            flex: 1; background: rgba(5, 15, 30, 0.85); border-left: 3px solid var(--kgi-bright-blue);
+            flex: 1; background: rgba(5, 15, 30, 0.85); border-left: 3px solid #0080ff;
             box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2); display: flex; flex-direction: column; z-index: 50; backdrop-filter: blur(20px);
         }
         .sidebar-header {
-            padding: 25px; background: linear-gradient(90deg, var(--kgi-blue), transparent);
-            border-bottom: 2px solid var(--neon-cyan); text-align: center; cursor: pointer; user-select: none;
+            padding: 25px; background: linear-gradient(90deg, #004a99, transparent);
+            border-bottom: 2px solid #00ffff; text-align: center; cursor: pointer; user-select: none;
         }
         .sidebar-header h2 {
-            margin: 0; color: var(--neon-white); font-size: 1.8rem; letter-spacing: 3px;
-            text-shadow: 0 0 15px var(--kgi-orange); font-style: italic;
+            margin: 0; color: #ffffff; font-size: 1.8rem; letter-spacing: 3px;
+            text-shadow: 0 0 15px #ff6600; font-style: italic;
         }
         .message-list { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
         .msg-card {
             background: linear-gradient(110deg, rgba(0, 50, 150, 0.3), rgba(0, 0, 0, 0.5));
-            border: 1px solid var(--kgi-bright-blue); border-left: 5px solid var(--kgi-orange);
+            border: 1px solid #0080ff; border-left: 5px solid #ff6600;
             border-radius: 4px; padding: 15px; margin-bottom: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; overflow: hidden;
             animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -172,13 +191,13 @@
         @keyframes cardShine { 0% { left: -150%; } 30%, 100% { left: 150%; } }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
 
-        .msg-name { color: var(--neon-cyan); font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: flex; justify-content: space-between;}
+        .msg-name { color: #00ffff; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: flex; justify-content: space-between;}
         .msg-time { color: #aaa; font-size: 0.8rem; }
         .msg-content { font-size: 1.2rem; text-shadow: 1px 1px 2px black; }
 
         .status-light {
-            position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.8); border: 2px solid var(--neon-cyan);
-            padding: 10px 20px; border-radius: 30px; z-index: 200; box-shadow: 0 0 20px var(--neon-cyan); font-weight: bold;
+            position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.8); border: 2px solid #00ffff;
+            padding: 10px 20px; border-radius: 30px; z-index: 200; box-shadow: 0 0 20px #00ffff; font-weight: bold;
         }
         .dot.online { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
@@ -187,10 +206,10 @@
         }
         .marquee-item {
             position: absolute; white-space: nowrap; font-size: 3rem; color: #fff;
-            text-shadow: 0 0 15px var(--kgi-bright-blue), 0 0 30px var(--neon-cyan);
+            text-shadow: 0 0 15px #0080ff, 0 0 30px #00ffff;
             font-weight: 900; bottom: -100px; padding: 25px 50px;
-            background: linear-gradient(90deg, var(--kgi-blue), #000); 
-            border: 3px solid var(--neon-white); border-radius: 60px;
+            background: linear-gradient(90deg, #004a99, #000); 
+            border: 3px solid #ffffff; border-radius: 60px;
             box-shadow: 0 10px 50px rgba(0, 150, 255, 0.6);
             animation: flyToTop 15s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
@@ -259,12 +278,19 @@
         let filledCount = 0;
         const building = document.getElementById('building');
         const pieces = [];
-        
-        // === [新增] 紀錄管理 ===
-        const blessingHistory = []; // 儲存所有留言資料
-        let vipStatus = { chairman: false, gm: false }; // 紀錄 VIP 是否已發言
-        let hasAutoDownloaded = false; // 防止重複下載
-        let clickCount = 0; // 手動下載計數器
+        const blessingHistory = []; 
+        let vipStatus = { chairman: false, gm: false }; 
+        let hasAutoDownloaded = false; 
+        let clickCount = 0; 
+
+        // === [新增] 色彩循環定義 ===
+        const colorSequence = ['blue', 'white', 'orange', 'green'];
+        const colorHexMap = {
+            'blue': '#0080ff',
+            'white': '#ffffff',
+            'orange': '#ff6600',
+            'green': '#39ff14' // 螢光綠
+        };
 
         function initBuilding() {
             building.innerHTML = '';
@@ -306,7 +332,8 @@
             return vipIndices[0]; 
         }
 
-        function triggerEnergyExplosion(targetElement, isVip = false) {
+        // === 炸裂特效 (含顏色參數) ===
+        function triggerEnergyExplosion(targetElement, colorHex) {
             const rect = targetElement.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
@@ -316,15 +343,12 @@
             document.body.classList.add('screen-shake');
             setTimeout(() => document.body.classList.remove('screen-shake'), 500);
 
-            const shockwaveColor = isVip ? '#ffd700' : '#ffffff';
-            const shockwaveShadow = isVip ? 'orange' : 'var(--neon-cyan)';
-
             const shockwave = document.createElement('div');
             shockwave.classList.add('massive-shockwave');
             shockwave.style.left = centerX + 'px';
             shockwave.style.top = centerY + 'px';
-            shockwave.style.borderColor = shockwaveColor;
-            shockwave.style.boxShadow = `0 0 120px ${shockwaveShadow}, inset 0 0 120px ${shockwaveShadow}`;
+            shockwave.style.borderColor = colorHex; // 使用傳入的顏色
+            shockwave.style.boxShadow = `0 0 120px ${colorHex}, inset 0 0 120px ${colorHex}`;
             document.body.appendChild(shockwave);
             
             shockwave.animate([
@@ -332,8 +356,9 @@
                 { width: '2500px', height: '2500px', opacity: 0, borderWidth: '0px' }
             ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
-            const particleCount = isVip ? 80 : 50; 
-            const colors = isVip ? ['#ffd700', '#ffcc00', '#ffffff'] : ['#00ffff', '#ffffff', '#0080ff', '#ff6600'];
+            const particleCount = 60;
+            // 粒子混合白色與主色
+            const colors = [colorHex, '#ffffff', colorHex];
             
             for (let i = 0; i < particleCount; i++) {
                 const p = document.createElement('div');
@@ -365,28 +390,16 @@
             const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
             card.innerHTML = `<div class="msg-name">${name}<span class="msg-time">${timeStr}</span></div><div class="msg-content">${msg}</div>`;
             list.insertBefore(card, list.firstChild);
-            // 讓列表保持所有記錄，不刪除舊的，方便老闆最後檢查
-            // if (list.children.length > 50) list.removeChild(list.lastChild); 
         }
 
-        // === [新增] 匯出 CSV 功能 ===
         function exportToCSV() {
-            if (blessingHistory.length === 0) {
-                alert("目前沒有任何祝福留言喔！");
-                return;
-            }
-
-            // CSV 標頭
+            if (blessingHistory.length === 0) { alert("無資料可下載"); return; }
             let csvContent = "\uFEFF發送時間,姓名/單位,祝福內容\n";
-            
             blessingHistory.forEach(item => {
-                // 處理內容中可能包含的逗號
                 const cleanName = item.name.replace(/,/g, "，");
                 const cleanMsg = item.msg.replace(/,/g, "，");
                 csvContent += `${item.time},${cleanName},${cleanMsg}\n`;
             });
-
-            // 建立下載連結
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -396,54 +409,48 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            console.log("已自動備份留言紀錄");
         }
 
-        // === [新增] 手動強制下載 (隱藏功能) ===
         function manualDownloadBackup() {
             clickCount++;
             if (clickCount === 3) {
-                const check = confirm("是否強制下載目前的祝福紀錄？");
-                if (check) exportToCSV();
+                if(confirm("強制下載紀錄？")) exportToCSV();
                 clickCount = 0;
             }
-            // 2秒後重置計數器
             setTimeout(() => { clickCount = 0; }, 2000);
         }
 
         function onMessageReceived(name, msg) {
-            // 1. 存入歷史紀錄
             const now = new Date();
             const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
             blessingHistory.push({ time: timeStr, name: name, msg: msg });
-            
-            // 2. 更新側邊欄
             addToSidebar(name, msg);
 
-            // 3. 檢查是否觸發自動下載
             if (name.includes("董事長")) vipStatus.chairman = true;
             if (name.includes("總經理")) vipStatus.gm = true;
-
-            // 如果兩位長官都講過話，且還沒自動下載過，就觸發
             if (vipStatus.chairman && vipStatus.gm && !hasAutoDownloaded) {
-                setTimeout(() => {
-                    exportToCSV();
-                    hasAutoDownloaded = true;
-                }, 3000); // 延遲3秒，讓長官的彈幕先跑出來再跳下載視窗
+                setTimeout(() => { exportToCSV(); hasAutoDownloaded = true; }, 3000);
             }
 
-            // 4. 點亮大樓邏輯
             if (filledCount >= totalPieces) return;
 
             const isVipUser = name.includes("董事長") || name.includes("總經理");
             let targetIndex = -1;
+            let finalColorHex = '#ffffff'; // 預設
 
             if (isVipUser) {
                 targetIndex = getVipEmptyIndex();
                 if (targetIndex === -1) targetIndex = getRandomEmptyIndex();
+                // VIP 固定金色
+                finalColorHex = '#ffd700'; 
             } else {
                 targetIndex = getRandomEmptyIndex();
+                // 一般人使用四色循環
+                if (targetIndex !== -1) {
+                    const colorName = colorSequence[filledCount % 4];
+                    finalColorHex = colorHexMap[colorName];
+                    pieces[targetIndex].classList.add(`c-${colorName}`);
+                }
             }
 
             if (targetIndex !== -1) {
@@ -451,7 +458,7 @@
                 targetPiece.classList.add('active');
                 filledCount++;
                 
-                triggerEnergyExplosion(targetPiece, isVipUser);
+                triggerEnergyExplosion(targetPiece, finalColorHex);
                 showMarquee(`${name}：${msg}`);
 
                 if (filledCount === totalPieces) {
