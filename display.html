@@ -15,10 +15,9 @@
             --neon-white: #ffffff;
             --sidebar-bg: rgba(3, 10, 20, 0.9);
             
-            /* [關鍵修改] 格子尺寸最大化：
-               12層樓 * 7.8 = 93.6%，幾乎填滿整個垂直空間。
-               同時限制寬度不超過左側區域 */
-            --grid-size: min(7.8vh, 7.8vw); 
+            /* [關鍵修改] 80格專用尺寸：
+               11層樓 * 8.2 = 90.2% 高度，完美撐滿畫面 */
+            --grid-size: min(8.2vh, 8.2vw); 
         }
 
         body {
@@ -30,6 +29,7 @@
             overflow: hidden;
         }
 
+        /* === 全螢幕震動 === */
         .screen-shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
             transform: translate3d(0, 0, 0);
@@ -49,7 +49,7 @@
         }
         .warp-star {
             position: absolute;
-            width: 3px; height: 3px;
+            width: 4px; height: 4px; /* 配合大格子，星星也加大 */
             background: var(--neon-cyan);
             border-radius: 50%; opacity: 0;
             box-shadow: 0 0 10px var(--neon-cyan);
@@ -59,7 +59,7 @@
         @keyframes warpSpeed {
             0% { opacity: 0; transform: translateY(0) scale(0.5); }
             10% { opacity: 1; }
-            100% { opacity: 0; transform: translateY(-100vh) scale(5); height: 80px; }
+            100% { opacity: 0; transform: translateY(-100vh) scale(5); height: 100px; }
         }
 
         .layout-wrapper {
@@ -71,7 +71,6 @@
         .main-display {
             flex: 3; position: relative;
             display: flex; 
-            /* [修改] 讓大樓絕對置中 */
             justify-content: center; 
             align-items: center; 
             background-image: 
@@ -79,22 +78,19 @@
                 radial-gradient(transparent, black);
             background-size: 10px 10px, 100% 100%;
             
-            perspective: 1000px;
-            perspective-origin: 50% 90%; /* 視點壓低 */
+            perspective: 1200px; /* 透視感增強 */
+            perspective-origin: 50% 90%; 
         }
 
         .title {
-            /* [修改] 改為絕對定位，浮動在上方，不佔用排版空間 */
-            position: absolute;
-            top: 20px;
+            position: absolute; top: 15px;
             width: 100%; text-align: center;
-            
-            font-size: 3.5rem; 
+            font-size: 3.8rem; 
             color: var(--neon-white);
             text-shadow: 0 0 10px var(--neon-cyan), 0 0 30px var(--kgi-bright-blue), 0 0 70px var(--kgi-bright-blue);
-            letter-spacing: 10px; font-weight: 900; z-index: 20;
+            letter-spacing: 12px; font-weight: 900; z-index: 20;
             animation: titlePulse 2s infinite alternate;
-            pointer-events: none; /* 讓點擊穿透 */
+            pointer-events: none;
         }
         @keyframes titlePulse {
             from { filter: brightness(1); text-shadow: 0 0 20px var(--kgi-bright-blue); }
@@ -102,12 +98,9 @@
         }
 
         .slogan {
-            /* [修改] 改為絕對定位，浮動在下方 */
-            position: absolute;
-            bottom: 30px;
+            position: absolute; bottom: 25px;
             width: 100%; text-align: center;
-
-            font-size: 2.2rem; 
+            font-size: 2.5rem; 
             font-weight: bold; z-index: 20;
             color: var(--neon-white);
             text-shadow: 0 0 20px var(--kgi-orange);
@@ -120,22 +113,21 @@
             position: relative; 
             padding: 0; border: none; box-shadow: none;
             z-index: 10;
-            /* 仰角呈現 */
-            transform: rotateX(15deg) translateY(-20px); 
+            /* 調整角度與位置，確保大格子不切邊 */
+            transform: rotateX(15deg) translateY(-10px); 
             transform-style: preserve-3d;
             display: flex; justify-content: center; align-items: center;
         }
 
         .building-grid { display: grid; gap: 0.5vh; margin: 0 auto; }
 
-        /* === 格子樣式 (使用極限尺寸) === */
+        /* === 格子樣式 === */
         .piece {
-            width: var(--grid-size); 
-            height: var(--grid-size);
+            width: var(--grid-size); height: var(--grid-size);
             background-color: rgba(0, 15, 30, 0.6);
             border: 1px solid rgba(0, 150, 255, 0.2);
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-            border-radius: 4px; position: relative;
+            border-radius: 6px; position: relative;
             animation: unstableEnergy 0.8s infinite alternate steps(5);
             transition: transform 0.3s;
         }
@@ -160,8 +152,8 @@
                 0 0 100px var(--kgi-bright-blue),
                 0 0 150px var(--neon-cyan) !important;
             z-index: 100;
-            /* 凸起程度也隨比例放大 */
-            transform: scale(1.1) translateZ(5vh); 
+            /* 配合大尺寸，凸起更明顯 */
+            transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
         }
         @keyframes activePlasma {
@@ -170,15 +162,15 @@
 
         /* === 爆炸特效 === */
         .explosion-particle {
-            position: absolute; width: 10px; height: 10px;
+            position: absolute; width: 12px; height: 12px;
             background: var(--neon-white); border-radius: 50%;
             box-shadow: 0 0 20px var(--color); pointer-events: none; z-index: 9999;
         }
         .massive-shockwave {
             position: absolute; width: 0; height: 0;
             border-radius: 50%; background: transparent;
-            border: 40px solid var(--neon-white);
-            box-shadow: 0 0 100px var(--neon-cyan), inset 0 0 100px var(--neon-cyan);
+            border: 50px solid var(--neon-white);
+            box-shadow: 0 0 120px var(--neon-cyan), inset 0 0 120px var(--neon-cyan);
             opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998;
         }
 
@@ -230,9 +222,10 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 100;
         }
         .marquee-item {
-            position: absolute; white-space: nowrap; font-size: 2.5rem; color: #fff;
+            position: absolute; white-space: nowrap; font-size: 3rem; /* 彈幕字體也加大 */
+            color: #fff;
             text-shadow: 0 0 15px var(--kgi-bright-blue), 0 0 30px var(--neon-cyan);
-            font-weight: 900; bottom: -100px; padding: 20px 40px;
+            font-weight: 900; bottom: -100px; padding: 25px 50px;
             background: linear-gradient(90deg, var(--kgi-blue), #000); 
             border: 3px solid var(--neon-white); border-radius: 60px;
             box-shadow: 0 10px 50px rgba(0, 150, 255, 0.6);
@@ -285,12 +278,28 @@
         }
         createWarpStars();
 
+        // === [關鍵修改] 80格地圖矩陣 (9欄 x 11列) ===
+        // 設計邏輯：
+        // R1: 000101000 (2) 天線
+        // R2: 001101100 (4) 塔頂
+        // R3: 011101110 (6) 肩膀
+        // R4-R10: 111111111 (9*7=63) 主體
+        // R11: 011010110 (5) 底部入口
+        // 總計: 2+4+6+63+5 = 80格
         const buildingMap = [
-            [0,0,1,0,0,0,1,0,0], [0,0,1,1,0,1,1,0,0], [0,1,1,1,0,1,1,1,0], 
-            [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], [1,1,1,1,1,1,1,1,1], [1,1,1,0,0,0,1,1,1]
+            [0,0,0,1,0,1,0,0,0], 
+            [0,0,1,1,0,1,1,0,0], 
+            [0,1,1,1,0,1,1,1,0], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [0,1,1,0,1,0,1,1,0]
         ];
+        
         let totalPieces = 0;
         let filledCount = 0;
         const building = document.getElementById('building');
@@ -299,7 +308,6 @@
         function initBuilding() {
             building.innerHTML = '';
             const cols = buildingMap[0].length;
-            // [關鍵修改] 使用 CSS 變數定義的最大化尺寸
             building.style.gridTemplateColumns = `repeat(${cols}, var(--grid-size))`;
             
             buildingMap.forEach((row) => {
@@ -312,6 +320,7 @@
                     }
                 });
             });
+            console.log("Total Pieces Generated:", totalPieces); // 確認為 80
         }
 
         function getRandomEmptyIndex() {
@@ -336,7 +345,6 @@
             shockwave.style.top = centerY + 'px';
             document.body.appendChild(shockwave);
             
-            // 衝擊波範圍也加大
             shockwave.animate([
                 { width: '0px', height: '0px', opacity: 1, borderWidth: '50px' },
                 { width: '2500px', height: '2500px', opacity: 0, borderWidth: '0px' }
