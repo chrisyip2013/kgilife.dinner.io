@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (KGI Logo 像素級修正版)</title>
+    <title>凱基永續．共築願景 (KGI Logo 絕對座標版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -30,7 +30,7 @@
             height: 100vh; overflow: hidden;
         }
 
-        /* === 震動與背景特效 === */
+        /* === 全螢幕震動 === */
         .screen-shake {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
             transform: translate3d(0, 0, 0);
@@ -126,33 +126,34 @@
             border-width: 0 !important;
         }
 
-        /* === 純色樣式 === */
+        /* === KGI Logo 定義色 === */
         .c-blue { background: var(--kgi-blue) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .c-orange { background: var(--kgi-orange) !important; box-shadow: 0 0 30px var(--kgi-orange); }
         .c-green { background: var(--kgi-green) !important; box-shadow: 0 0 30px var(--kgi-green); }
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
-        /* === [關鍵修正] 漸層樣式 === */
+        /* === 特殊漸層斜切 (根據您的最新指示) === */
         
-        /* 1. 左下區對角線 (Top-Left Orange, Bottom-Right Blue) */
-        /* 使用 135deg (\) */
-        .split-orange-blue-diag {
-            background: linear-gradient(135deg, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important;
-            box-shadow: 0 0 30px var(--kgi-orange);
+        /* 1. 左下斜切 [B\O]：左下橘，右上藍 (對角線 \) */
+        /* 使用 45deg: 左下是起始點(橘)，右上是終點(藍) */
+        .split-diag-orange-blue { 
+            background: linear-gradient(45deg, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important; 
+            box-shadow: 0 0 30px var(--kgi-blue);
         }
 
-        /* 2. 右下區對角線 (Top-Left White, Bottom-Right Blue) */
-        /* 使用 -45deg (/) */
-        .split-white-blue-diag {
-            background: linear-gradient(-45deg, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important;
-            box-shadow: 0 0 30px var(--kgi-white);
+        /* 2. 右下斜切 [W/B]：左上白，右下藍 (對角線 /) */
+        /* 使用 135deg: 左上是起始點(白)，右下是終點(藍) */
+        .split-diag-white-blue { 
+            background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; 
+            box-shadow: 0 0 30px var(--kgi-blue);
         }
 
-        /* 上半部的對角線 (維持原樣) */
-        .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; }
-        .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-green) 50%) !important; }
+        /* 3. 上半部舊有的漸層 (維持不變) */
+        .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
+        .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
         
-        /* 中軸線漸層 */
+        /* 中軸線 */
+        .split-horz-blue-orange { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; }
         .split-horz-blue-white { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; }
         .split-vert-orange-white { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important; }
 
@@ -272,17 +273,17 @@
         createWarpStars();
 
         const buildingMap = [
-            [0,0,0,2,0,2,0,0,0], 
-            [0,0,1,1,0,1,1,0,0], 
-            [0,1,1,1,0,1,1,1,0], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [1,1,1,1,1,1,1,1,1], 
-            [0,1,1,0,1,0,1,1,0]
+            [0,0,0,2,0,2,0,0,0], // 0
+            [0,0,1,1,0,1,1,0,0], // 1
+            [0,1,1,1,0,1,1,1,0], // 2
+            [1,1,1,1,1,1,1,1,1], // 3
+            [1,1,1,1,1,1,1,1,1], // 4
+            [1,1,1,1,1,1,1,1,1], // 5
+            [1,1,1,1,1,1,1,1,1], // 6 -> Row Index 6 (實際上是第7層)
+            [1,1,1,1,1,1,1,1,1], // 7 -> Row Index 7 (實際上是第8層)
+            [1,1,1,1,1,1,1,1,1], // 8 -> Row Index 8 (實際上是第9層)
+            [1,1,1,1,1,1,1,1,1], // 9 -> Row Index 9 (實際上是第10層)
+            [0,1,1,0,1,0,1,1,0]  // 10
         ];
         
         let totalPieces = 0;
@@ -327,72 +328,90 @@
             });
         }
 
-        // === [核心] 9x11 格點 Logo 映射邏輯 (像素級修正) ===
+        // === [核心修正] 絕對座標顏色指定 ===
         function determineLogoColor(col, row) {
-            // 坐標系統：Col 0-8 (9欄), Row 0-10 (11列)
             
-            // --- 底部中軸修正 ---
-            if (col === 4 && row >= 9) return 'c-blue';
-
-            // --- 特殊指定斜線區域 (Bottom-Left & Bottom-Right) ---
-            
-            // 1. 左下斜邊 (Bottom-Left Diagonal) - 上橘下藍 (\)
-            if ( (col===0 && row===6) || (col===1 && row===7) || (col===2 && row===8) || (col===3 && row===9) ) {
-                return 'split-orange-blue-diag';
-            }
-
-            // 2. 右下斜邊 (Bottom-Right Diagonal) - 上白下藍 (/)
-            if ( (col===8 && row===6) || (col===7 && row===7) || (col===6 && row===8) || (col===5 && row===9) ) {
-                return 'split-white-blue-diag';
-            }
-
-            // --- 中軸線處理 ---
+            // 1. 中軸線 Row 5, Col 4
             if (col === 4) {
                 if (row < 5) return 'c-blue'; 
                 if (row === 5) return 'split-vert-orange-white'; 
-                return 'split-vert-orange-white'; 
+                if (row >= 6 && row <= 9) return 'split-vert-orange-white'; // 中軸下半部：左橘右白
+                if (row === 10) return 'c-blue'; // 最底：藍
             }
             if (row === 5) {
                 if (col < 4) return 'c-orange'; 
-                if (col > 4) return 'split-horz-blue-white'; 
+                if (col > 4) return 'split-horz-blue-white';  
             }
 
-            // --- 一般區域填充 ---
-            
-            // 上半部 (Rows 0-4)
+            // 2. 上半部 (Row 0~4) - 維持原樣
             if (row < 5) {
                 if (col < 4) { // 左上
                     if (col + row <= 3) return 'c-blue';
                     if (col + row === 4) return 'split-blue-orange-diag';
                     return 'c-orange';
-                } else { // 右上
+                } else if (col > 4) { // 右上
                     if ((col - 4) - row >= 1) return 'c-green';
                     if ((col - 4) - row === 0) return 'split-blue-green-diag';
                     return 'c-blue';
                 }
             }
 
-            // 下半部 (Rows 6-10) - 剩餘填充
-            if (row > 5) {
-                // 左下剩餘
-                if (col < 4) {
-                    // 斜線是 col = row - 6
-                    // 如果 col < row - 6，則是斜線右下方 -> 藍色
-                    // 如果 col > row - 6，則是斜線左上方 -> 橘色 (但這裡只有左下三角，邏輯反過來)
-                    // 檢查: (0,6)是斜線. (0,7)應為藍. (0,8)藍...
-                    if (row > (col + 6)) return 'c-blue';
-                    return 'c-orange';
+            // 3. 下半部 (Row 6~10) - 根據圖解強制指定
+            if (row >= 6) { // JS row index 6 corresponds to "Row 7" in visual
+                
+                // === 左下區域 (Cols 0-3) ===
+                // Row 6 (Row 7 visually)
+                if (row === 6) {
+                    if (col === 0) return 'split-diag-orange-blue'; // [B\O]
+                    if (col >= 1 && col <= 3) return 'c-orange';    // [O]
                 }
-                // 右下剩餘
-                if (col > 4) {
-                    // 斜線是 col = 14 - row (大約) -> col + row = 14
-                    // 檢查 (8,6) 斜線. (8,7)藍. (8,8)藍.
-                    if (col + row > 14) return 'c-blue';
-                    return 'c-white';
+                // Row 7 (Row 8 visually)
+                if (row === 7) {
+                    if (col === 0) return 'c-blue';                 // [B]
+                    if (col === 1) return 'split-diag-orange-blue'; // [B\O]
+                    if (col >= 2 && col <= 3) return 'c-orange';    // [O]
                 }
+                // Row 8 (Row 9 visually)
+                if (row === 8) {
+                    if (col <= 1) return 'c-blue';                  // [B]
+                    if (col === 2) return 'split-diag-orange-blue'; // [B\O]
+                    if (col === 3) return 'c-orange';               // [O]
+                }
+                // Row 9 (Row 10 visually)
+                if (row === 9) {
+                    if (col <= 2) return 'c-blue';                  // [B]
+                    if (col === 3) return 'split-diag-orange-blue'; // [B\O]
+                }
+                // Row 10 (Bottom base)
+                if (row === 10) return 'c-blue'; // 底部均為藍色
+
+                // === 右下區域 (Cols 5-8) ===
+                // Row 6 (Row 7 visually)
+                if (row === 6) {
+                    if (col >= 5 && col <= 7) return 'c-white';     // [W]
+                    if (col === 8) return 'split-diag-white-blue';  // [W/B]
+                }
+                // Row 7 (Row 8 visually)
+                if (row === 7) {
+                    if (col >= 5 && col <= 6) return 'c-white';     // [W]
+                    if (col === 7) return 'split-diag-white-blue';  // [W/B]
+                    if (col === 8) return 'c-blue';                 // [B]
+                }
+                // Row 8 (Row 9 visually)
+                if (row === 8) {
+                    if (col === 5) return 'c-white';                // [W]
+                    if (col === 6) return 'split-diag-white-blue';  // [W/B]
+                    if (col >= 7) return 'c-blue';                  // [B]
+                }
+                // Row 9 (Row 10 visually)
+                if (row === 9) {
+                    if (col === 5) return 'split-diag-white-blue';  // [W/B]
+                    if (col >= 6) return 'c-blue';                  // [B]
+                }
+                // Row 10 (Bottom base) - 已處理
             }
             
-            return 'c-blue'; // Fallback
+            return 'c-blue'; 
         }
 
         function getHexFromClass(className) {
