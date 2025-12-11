@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (KGI Logo 定稿版)</title>
+    <title>凱基永續．共築願景 (KGI Logo 修正定稿版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -13,7 +13,6 @@
             
             /* KGI 品牌色 (依據您提供的 Logo 圖片校正) */
             --kgi-blue: #00479d;   /* 深藍 */
-            --kgi-light-blue: #009FE3; /* 亮藍(漸層用) */
             --kgi-orange: #f58025; /* 橘色 */
             --kgi-green: #5cba46;  /* 綠色 */
             --kgi-white: #ffffff;  /* 白色 */
@@ -133,39 +132,20 @@
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
         /* === 漸層斜切 (Gradient Splits) === */
-        /* 對角線：左上藍 / 右下橘 */
-        .split-blue-orange-diag {
-            background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important;
-        }
-        /* 對角線：左下藍 / 右上綠 */
-        .split-blue-green-diag {
-            background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important;
-        }
-        /* 對角線：左上橘 / 右下藍 */
-        .split-orange-blue-diag {
-            background: linear-gradient(135deg, var(--kgi-orange) 48%, var(--kgi-blue) 52%) !important;
-        }
-        /* 對角線：左下白 / 右上藍 */
-        .split-white-blue-diag {
-            background: linear-gradient(45deg, var(--kgi-white) 48%, var(--kgi-blue) 52%) !important;
-        }
+        /* 左上：藍/橘 */
+        .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
+        /* 右上：藍/綠 */
+        .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
+        /* [修正] 左下：橘/藍 (上方橘，下方藍) */
+        .split-orange-blue-diag { background: linear-gradient(135deg, var(--kgi-orange) 48%, var(--kgi-blue) 52%) !important; }
+        /* [修正] 右下：白/藍 (上方白，下方藍) */
+        .split-white-blue-diag { background: linear-gradient(45deg, var(--kgi-white) 48%, var(--kgi-blue) 52%) !important; }
         
-        /* 水平與垂直切分 (中軸線) */
-        .split-horz-blue-orange {
-            background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important;
-        }
-        .split-horz-blue-white {
-            background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important;
-        }
-        .split-vert-blue-mix {
-            /* Col 4 特殊：上藍，下半部再分左右 */
-            background: linear-gradient(to bottom, var(--kgi-blue) 50%, #ccc 50%) !important; 
-            /* 簡易處理：中軸下半部用灰色代表左右分界 */
-        }
-        /* 下半部 Col 4: 左橘右白 */
-        .split-vert-orange-white {
-            background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important;
-        }
+        /* 中軸線漸層 */
+        .split-horz-blue-orange { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; }
+        .split-horz-blue-white { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; }
+        /* [修正] 垂直中軸下半部：左橘右藍 */
+        .split-vert-orange-blue { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important; }
 
         .piece.vip-star.active {
             background: #fff !important; 
@@ -305,7 +285,6 @@
         let hasAutoDownloaded = false; 
         let clickCount = 0; 
 
-        // Logo 品牌色
         const kgiColors = {
             orange: '#f58025',
             green: '#5cba46',
@@ -322,9 +301,8 @@
             buildingMap.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
                     const div = document.createElement('div');
-                    // 預先計算並綁定顏色
                     const colorClass = determineLogoColor(colIndex, rowIndex);
-                    div.dataset.colorClass = colorClass; // 存起來備用
+                    div.dataset.colorClass = colorClass;
 
                     if (cell === 1) {
                         div.classList.add('piece'); 
@@ -340,54 +318,45 @@
             });
         }
 
-        // === [核心] 9x11 格點 Logo 映射邏輯 ===
+        // === [修正] 9x11 格點 Logo 映射邏輯 ===
         function determineLogoColor(col, row) {
-            // 坐標定義：Col 0-8 (9欄), Row 0-10 (11列)
-            // 中心點：Col 4, Row 5 (Row index 5 是第6列)
-            
             // 1. 中軸線 Col 4 (第5欄)
             if (col === 4) {
                 if (row < 5) return 'c-blue'; // 上半部：藍
-                // 下半部：左橘右白 (垂直漸層)
-                return 'split-vert-orange-white'; 
+                // [修正] 下半部：左橘右藍 (垂直漸層)
+                return 'split-vert-orange-blue'; 
             }
 
             // 2. 中軸線 Row 5 (第6列)
             if (row === 5) {
-                if (col < 4) return 'split-horz-blue-orange'; // 左半：上藍下橘
-                if (col > 4) return 'split-horz-blue-white';  // 右半：上藍下白
+                // [修正] 左半：上藍下橘 (水平漸層)
+                if (col < 4) return 'split-horz-blue-orange'; 
+                // [修正] 右半：上藍下白 (水平漸層)
+                if (col > 4) return 'split-horz-blue-white';  
             }
 
             // 3. 四大象限
             if (col < 4 && row < 5) {
-                // 左上 (Top-Left): 對角線 Col+Row=4 (大約)
-                // 實際上 Logo 是左上藍、右下橘 (相對於該象限中心)
-                // 這裡簡化為幾何圖形：
-                // 左上是 Blue (Col < 4-Row)
+                // 左上 (Top-Left): 對角線 col+row=4. 上藍下橘
                 if (col + row <= 3) return 'c-blue';
-                if (col + row === 4) return 'split-blue-orange-diag'; // 對角線
+                if (col + row === 4) return 'split-blue-orange-diag'; 
                 return 'c-orange';
             }
             else if (col > 4 && row < 5) {
-                // 右上 (Top-Right): 左下藍、右上綠
-                // 對角線 Col - Row = 4
+                // 右上 (Top-Right): 對角線 col-row=4. 上綠下藍
                 if ((col - 4) - row >= 1) return 'c-green';
                 if ((col - 4) - row === 0) return 'split-blue-green-diag';
                 return 'c-blue';
             }
             else if (col < 4 && row > 5) {
-                // 左下 (Bottom-Left): 左上橘、右下藍
-                // 對角線 Row - Col = 5
-                // (Row-5) vs Col
-                if ((row - 5) - col > 0) return 'c-blue'; // 下方
+                // [修正] 左下 (Bottom-Left): 對角線 row-col=5. 上橘下藍
+                if ((row - 5) - col < 0) return 'c-orange'; // 上方
                 if ((row - 5) === col) return 'split-orange-blue-diag';
-                return 'c-orange';
+                return 'c-blue';
             }
             else { // col > 4 && row > 5
-                // 右下 (Bottom-Right): 左上藍、右下白
-                // 對角線 Col + Row = 14 (大約)
-                // (Row-5) + (Col-4)
-                if ((row-5) + (col-4) > 4) return 'c-white';
+                // [修正] 右下 (Bottom-Right): 對角線 (row-5)+(col-4)=4. 上白下藍
+                if ((row-5) + (col-4) < 4) return 'c-white'; // 上方
                 if ((row-5) + (col-4) === 4) return 'split-white-blue-diag';
                 return 'c-blue';
             }
@@ -395,7 +364,6 @@
             return 'c-blue'; // Fallback
         }
 
-        // 從 CSS Class 取得 HEX 顏色 (給爆炸特效用)
         function getHexFromClass(className) {
             if (className.includes('orange')) return kgiColors.orange;
             if (className.includes('green')) return kgiColors.green;
@@ -530,7 +498,6 @@
             } else {
                 targetIndex = getRandomEmptyIndex();
                 if (targetIndex !== -1) {
-                    // 從預先計算好的 dataset 取出顏色
                     const colorClass = pieces[targetIndex].dataset.colorClass;
                     pieces[targetIndex].classList.add(colorClass);
                     finalColorHex = getHexFromClass(colorClass);
