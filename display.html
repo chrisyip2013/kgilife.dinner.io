@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (完美Logo呈現版)</title>
+    <title>凱基永續．共築願景 (Logo完美復刻版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -12,11 +12,11 @@
             --sidebar-bg: rgba(3, 10, 20, 0.9);
             
             /* KGI Logo 精確品牌色系 */
-            --kgi-orange: #f05a22; /* Logo 左側橘紅 */
-            --kgi-green: #6abf4b;  /* Logo 右上綠色 */
-            --kgi-blue: #0056b8;   /* Logo 右下藍色 */
-            --kgi-white: #ffffff;  /* Logo 中間白 */
-            --vip-gold: #ffd700;   /* VIP 金色 */
+            --kgi-blue: #004a99;   /* 深藍 */
+            --kgi-orange: #f37021; /* 橘紅 */
+            --kgi-green: #6cc04a;  /* 鮮綠 */
+            --kgi-white: #ffffff;  /* 純白 */
+            --vip-gold: #ffd700;   /* VIP 金 */
             
             /* 80格極限尺寸 */
             --grid-size: min(8.2vh, 8.2vw); 
@@ -101,9 +101,10 @@
             background-color: rgba(0, 15, 30, 0.6);
             border: 1px solid rgba(0, 150, 255, 0.2);
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-            border-radius: 6px; position: relative;
+            border-radius: 4px; /* Logo 需要較方正的邊角 */
+            position: relative;
             animation: unstableEnergy 0.8s infinite alternate steps(5);
-            transition: transform 0.3s;
+            transition: transform 0.3s, background 0.3s;
         }
         .piece:nth-child(odd) { animation-delay: 0.2s; } .piece:nth-child(3n) { animation-duration: 1.2s; } .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
         @keyframes unstableEnergy {
@@ -123,37 +124,33 @@
         .piece.active {
             z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
-            border-width: 2px !important;
-            border-style: solid !important;
+            border: 2px solid rgba(255,255,255,0.8) !important; /* 統一白邊框增加俐落感 */
         }
 
-        /* === 精確 Logo 色彩映射樣式 === */
-        /* 橘色 (左側下半三角形) */
-        .piece.active.c-orange {
-            background: var(--kgi-white) !important; border-color: var(--kgi-white) !important;
-            box-shadow: 0 0 20px var(--kgi-orange), 0 0 60px var(--kgi-orange), inset 0 0 20px var(--kgi-orange) !important;
+        /* === [關鍵] Logo 雙色漸層樣式 (135度對角切割) === */
+        
+        /* 樣式 A: 左上藍 / 右下橘 (用於左半部整體) */
+        .piece.active.grad-blue-orange {
+            background: linear-gradient(135deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important;
+            box-shadow: 0 0 30px var(--kgi-blue), 0 0 60px var(--kgi-orange) !important;
         }
-        /* 綠色 (右上半三角形) */
-        .piece.active.c-green {
-            background: var(--kgi-white) !important; border-color: var(--kgi-white) !important;
-            box-shadow: 0 0 20px var(--kgi-green), 0 0 60px var(--kgi-green), inset 0 0 20px var(--kgi-green) !important;
+        /* 樣式 B: 左上藍 / 右下綠 (用於右上區塊) */
+        .piece.active.grad-blue-green {
+            background: linear-gradient(135deg, var(--kgi-blue) 50%, var(--kgi-green) 50%) !important;
+            box-shadow: 0 0 30px var(--kgi-blue), 0 0 60px var(--kgi-green) !important;
         }
-        /* 藍色 (左側上半、右側下半三角形、上半脊椎) */
-        .piece.active.c-blue {
-            background: var(--kgi-white) !important; border-color: var(--kgi-white) !important;
-            box-shadow: 0 0 20px var(--kgi-blue), 0 0 60px var(--kgi-blue), inset 0 0 20px var(--kgi-blue) !important;
-        }
-        /* 白色 (右下半三角形、下半脊椎) */
-        .piece.active.c-white {
-            background: var(--kgi-white) !important; border-color: var(--kgi-white) !important;
-            box-shadow: 0 0 20px var(--kgi-white), 0 0 60px #cccccc, inset 0 0 20px var(--kgi-white) !important;
+        /* 樣式 C: 左上白 / 右下藍 (用於右下區塊) */
+        .piece.active.grad-white-blue {
+            background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important;
+            box-shadow: 0 0 30px var(--kgi-white), 0 0 60px var(--kgi-blue) !important;
         }
 
-        /* VIP 星星激活 (金色) */
+        /* VIP 星星激活 (維持純金) */
         .piece.vip-star.active {
-            background: #fff !important; 
+            background: var(--vip-gold) !important; 
             filter: drop-shadow(0 0 10px var(--vip-gold)) drop-shadow(0 0 30px var(--vip-gold)) drop-shadow(0 0 50px orange);
             z-index: 150; transform: scale(1.5) translateZ(10vh);
+            border: none !important;
             animation: starPulse 1s infinite alternate !important;
         }
         @keyframes starPulse { from { filter: drop-shadow(0 0 20px var(--vip-gold)); } to { filter: drop-shadow(0 0 50px var(--vip-gold)) drop-shadow(0 0 80px white); } }
@@ -293,9 +290,9 @@
 
         // KGI Logo 品牌色 HEX 代碼
         const kgiColors = {
-            orange: '#f05a22',
-            green: '#6abf4b',
-            blue: '#0056b8',
+            blue: '#004a99',
+            orange: '#f37021',
+            green: '#6cc04a',
             white: '#ffffff',
             gold: '#ffd700'
         };
@@ -308,7 +305,7 @@
             buildingMap.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
                     const div = document.createElement('div');
-                    // 儲存座標資訊以便後續判斷顏色
+                    // 儲存座標
                     div.dataset.row = rowIndex;
                     div.dataset.col = colIndex;
 
@@ -344,41 +341,27 @@
             return vipIndices[0]; 
         }
 
-        // === [關鍵修改] 根據位置決定顏色的邏輯 (模擬 Logo 對角切割) ===
-        function getColorByPosition(pieceElement) {
+        // === [關鍵修改] 根據位置決定 Logo 漸層樣式 ===
+        function getLogoStyleByPosition(pieceElement) {
             const row = parseInt(pieceElement.dataset.row);
             const col = parseInt(pieceElement.dataset.col);
-            const midRow = 5; // 中間行數
+            
+            // 總寬 9 (idx 0-8), 中軸 col 4
+            // 總高 11 (idx 0-10), 中線約 row 5
 
-            // === 中間脊椎 (Col 4) ===
-            if (col === 4) {
-                if (row <= midRow) return 'blue'; // 上半連結藍色
-                else return 'white'; // 下半連結白色
-            }
-
-            // === 左側 (Col 0-3) ===
-            // 目標：左上(藍/橘)，左下(藍/橘)。對角線從左上到右下。
-            if (col < 4) {
-                // 使用座標計算對角線閾值。如果 row 大於某個比例的 col，則為右下方(橘色)
-                if (row > col * 1.3) {
-                    return 'orange';
-                } else {
-                    return 'blue';
-                }
-            }
-            // === 右側 (Col 5-8) ===
+            // 1. 左半部 (含中軸) -> 藍橘漸層
+            if (col <= 4) {
+                return { class: 'grad-blue-orange', primaryColor: kgiColors.blue };
+            } 
+            // 2. 右半部
             else {
-                // 對角線從右上到左下。使用反向 col 計算。
-                // 右上象限 (綠/藍)
-                if (row <= midRow) {
-                    if (row > (8 - col) * 1.3) return 'blue'; // 靠近下方的藍色三角形
-                    else return 'green'; // 靠近上方的綠色三角形
-                }
-                // 右下象限 (白/藍)
+                // 右上 -> 藍綠漸層
+                if (row <= 5) {
+                     return { class: 'grad-blue-green', primaryColor: kgiColors.blue };
+                } 
+                // 右下 -> 白藍漸層
                 else {
-                    const relativeRow = row - (midRow + 1);
-                    if (relativeRow > (8 - col) * 1.3) return 'blue'; // 靠近下方的藍色三角形
-                    else return 'white'; // 靠近上方的白色三角形
+                     return { class: 'grad-white-blue', primaryColor: kgiColors.white };
                 }
             }
         }
@@ -408,7 +391,8 @@
             ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
             const particleCount = 60;
-            const colors = [colorHex, '#ffffff', colorHex];
+            // 粒子使用主色與白色混合
+            const colors = [colorHex, '#ffffff'];
             
             for (let i = 0; i < particleCount; i++) {
                 const p = document.createElement('div');
@@ -486,8 +470,8 @@
 
             const isVipUser = name.includes("董事長") || name.includes("總經理");
             let targetIndex = -1;
-            let finalColorHex = '#ffffff'; 
-            let colorClass = '';
+            let finalColorHex = kgiColors.white; // 預設爆炸色
+            let styleConfig = null;
 
             if (isVipUser) {
                 targetIndex = getVipEmptyIndex();
@@ -496,17 +480,18 @@
             } else {
                 targetIndex = getRandomEmptyIndex();
                 if (targetIndex !== -1) {
-                    // [關鍵修改] 根據位置決定顏色
-                    const colorName = getColorByPosition(pieces[targetIndex]);
-                    colorClass = `c-${colorName}`;
-                    finalColorHex = kgiColors[colorName];
+                    // 根據位置取得 Logo 樣式設定
+                    styleConfig = getLogoStyleByPosition(pieces[targetIndex]);
+                    finalColorHex = styleConfig.primaryColor;
                 }
             }
 
             if (targetIndex !== -1) {
                 const targetPiece = pieces[targetIndex];
                 targetPiece.classList.add('active');
-                if (colorClass) targetPiece.classList.add(colorClass); // 加入顏色 class
+                // 如果是一般格子，加上對應的漸層 class
+                if (styleConfig) targetPiece.classList.add(styleConfig.class);
+                
                 filledCount++;
                 
                 triggerEnergyExplosion(targetPiece, finalColorHex);
@@ -537,6 +522,7 @@
             pieces.forEach((p, i) => {
                 setTimeout(() => {
                     p.style.transform = 'scale(1.5) translateZ(150px)';
+                    // 完成時統一閃白光與藍光
                     p.style.boxShadow = '0 0 100px white, 0 0 150px var(--neon-cyan)';
                     p.style.zIndex = 200;
                     setTimeout(() => {
