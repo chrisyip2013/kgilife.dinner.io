@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (KGI Logo 絕對座標版 - 中軸修正)</title>
+    <title>凱基永續．共築願景 (Display 最終優化版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -133,20 +133,14 @@
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
         /* === 特殊漸層斜切 === */
-        
-        /* 1. 左下斜切 [B\O] */
         .split-diag-orange-blue { 
             background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; 
             box-shadow: 0 0 30px var(--kgi-orange);
         }
-
-        /* 2. 右下斜切 [W/B] */
         .split-diag-white-blue { 
             background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; 
             box-shadow: 0 0 30px var(--kgi-blue);
         }
-
-        /* 3. 上半部舊有的漸層 */
         .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
         .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
         
@@ -154,12 +148,7 @@
         .split-horz-blue-orange { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; }
         .split-horz-blue-white { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; }
         .split-vert-orange-white { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important; }
-
-        /* === [新增] 中軸線特殊樣式 === */
-        /* [O|B] 左橘右藍 */
         .split-vert-orange-blue { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important; }
-        
-        /* [O|B/W] 左橘，右半上藍下白 (圓錐漸層: 0-90度藍, 90-180度白, 180-360度橘) */
         .split-special-center {
             background: conic-gradient(from 0deg at 50% 50%, var(--kgi-blue) 0% 25%, var(--kgi-white) 25% 50%, var(--kgi-orange) 50% 100%) !important;
             box-shadow: 0 0 30px var(--kgi-white);
@@ -284,9 +273,9 @@
             [0,0,0,2,0,2,0,0,0], // 0
             [0,0,1,1,0,1,1,0,0], // 1
             [0,1,1,1,0,1,1,1,0], // 2
-            [1,1,1,1,1,1,1,1,1], // 3 (Row 4 in user diagram)
-            [1,1,1,1,1,1,1,1,1], // 4 (Row 5 in user diagram)
-            [1,1,1,1,1,1,1,1,1], // 5 (Row 6 in user diagram)
+            [1,1,1,1,1,1,1,1,1], // 3
+            [1,1,1,1,1,1,1,1,1], // 4
+            [1,1,1,1,1,1,1,1,1], // 5
             [1,1,1,1,1,1,1,1,1], // 6
             [1,1,1,1,1,1,1,1,1], // 7
             [1,1,1,1,1,1,1,1,1], // 8
@@ -302,6 +291,10 @@
         let vipStatus = { chairman: false, gm: false }; 
         let hasAutoDownloaded = false; 
         let clickCount = 0; 
+
+        // [新增] 彈幕跑道管理系統
+        const marqueeLanes = [5, 25, 45, 65]; // 定義 4 個水平跑道位置 (百分比)，最右邊保留給側邊欄不被遮擋
+        const laneNextAvailable = [0, 0, 0, 0]; // 記錄每個跑道何時可以再使用 (Timestamp)
 
         const kgiColors = {
             orange: '#f58025',
@@ -336,83 +329,70 @@
             });
         }
 
-        // === [核心修正] 絕對座標顏色指定 ===
+        // === Logo 邏輯 (維持原樣) ===
         function determineLogoColor(col, row) {
-            
-            // 1. 中軸線 Row 5, Col 4 (Index 4)
             if (col === 4) {
-                if (row < 3) return 'c-blue'; // 0, 1, 2
-                // [修正] Row 3, 4 (Row 4, 5 in diagram) -> [O|B]
+                if (row < 3) return 'c-blue';
                 if (row === 3 || row === 4) return 'split-vert-orange-blue';
-                // [修正] Row 5 (Row 6 in diagram) -> [O| B/W]
                 if (row === 5) return 'split-special-center';
-                
-                if (row >= 6 && row <= 9) return 'split-vert-orange-white'; // 中軸下半部：左橘右白
-                if (row === 10) return 'c-blue'; // 最底：藍
+                if (row >= 6 && row <= 9) return 'split-vert-orange-white';
+                if (row === 10) return 'c-blue';
             }
-            
             if (row === 5) {
                 if (col < 4) return 'c-orange'; 
                 if (col > 4) return 'split-horz-blue-white';  
             }
-
-            // 2. 上半部 (Row 0~4) - 維持原樣
             if (row < 5) {
-                if (col < 4) { // 左上
+                if (col < 4) {
                     if (col + row <= 3) return 'c-blue';
                     if (col + row === 4) return 'split-blue-orange-diag';
                     return 'c-orange';
-                } else if (col > 4) { // 右上
+                } else if (col > 4) {
                     if ((col - 4) - row >= 1) return 'c-green';
                     if ((col - 4) - row === 0) return 'split-blue-green-diag';
                     return 'c-blue';
                 }
             }
-
-            // 3. 下半部 (Row 6~10) - 根據圖解強制指定
             if (row >= 6) { 
-                // 左下區域 (Cols 0-3)
                 if (row === 6) {
-                    if (col === 0) return 'split-diag-orange-blue'; // [B\O]
-                    if (col >= 1 && col <= 3) return 'c-orange';    // [O]
+                    if (col === 0) return 'split-diag-orange-blue';
+                    if (col >= 1 && col <= 3) return 'c-orange';
                 }
                 if (row === 7) {
-                    if (col === 0) return 'c-blue';                 // [B]
-                    if (col === 1) return 'split-diag-orange-blue'; // [B\O]
-                    if (col >= 2 && col <= 3) return 'c-orange';    // [O]
+                    if (col === 0) return 'c-blue';
+                    if (col === 1) return 'split-diag-orange-blue';
+                    if (col >= 2 && col <= 3) return 'c-orange';
                 }
                 if (row === 8) {
-                    if (col <= 1) return 'c-blue';                  // [B]
-                    if (col === 2) return 'split-diag-orange-blue'; // [B\O]
-                    if (col === 3) return 'c-orange';               // [O]
+                    if (col <= 1) return 'c-blue';
+                    if (col === 2) return 'split-diag-orange-blue';
+                    if (col === 3) return 'c-orange';
                 }
                 if (row === 9) {
-                    if (col <= 2) return 'c-blue';                  // [B]
-                    if (col === 3) return 'split-diag-orange-blue'; // [B\O]
+                    if (col <= 2) return 'c-blue';
+                    if (col === 3) return 'split-diag-orange-blue';
                 }
                 if (row === 10) return 'c-blue'; 
 
-                // 右下區域 (Cols 5-8)
                 if (row === 6) {
-                    if (col >= 5 && col <= 7) return 'c-white';     // [W]
-                    if (col === 8) return 'split-diag-white-blue';  // [W/B]
+                    if (col >= 5 && col <= 7) return 'c-white';
+                    if (col === 8) return 'split-diag-white-blue';
                 }
                 if (row === 7) {
-                    if (col >= 5 && col <= 6) return 'c-white';     // [W]
-                    if (col === 7) return 'split-diag-white-blue';  // [W/B]
-                    if (col === 8) return 'c-blue';                 // [B]
+                    if (col >= 5 && col <= 6) return 'c-white';
+                    if (col === 7) return 'split-diag-white-blue';
+                    if (col === 8) return 'c-blue';
                 }
                 if (row === 8) {
-                    if (col === 5) return 'c-white';                // [W]
-                    if (col === 6) return 'split-diag-white-blue';  // [W/B]
-                    if (col >= 7) return 'c-blue';                  // [B]
+                    if (col === 5) return 'c-white';
+                    if (col === 6) return 'split-diag-white-blue';
+                    if (col >= 7) return 'c-blue';
                 }
                 if (row === 9) {
-                    if (col === 5) return 'split-diag-white-blue';  // [W/B]
-                    if (col >= 6) return 'c-blue';                  // [B]
+                    if (col === 5) return 'split-diag-white-blue';
+                    if (col >= 6) return 'c-blue';
                 }
             }
-            
             return 'c-blue'; 
         }
 
@@ -574,6 +554,7 @@
             }
         }
 
+        // === [關鍵修改] 彈幕跑道邏輯 (防遮擋 + 防重疊) ===
         function showMarquee(text) {
             const container = document.getElementById('marqueeArea');
             const el = document.createElement('div');
@@ -581,7 +562,33 @@
             el.innerText = text;
             const colors = ['#fff', '#ffd700', '#7df9ff', '#ffb74d'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
-            el.style.left = (5 + Math.random() * 80) + '%';
+
+            // 跑道選擇邏輯
+            const now = Date.now();
+            let chosenLaneIndex = -1;
+            // 隨機檢查跑道
+            const randomIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+            for (let i of randomIndices) {
+                if (now >= laneNextAvailable[i]) {
+                    chosenLaneIndex = i;
+                    break;
+                }
+            }
+            // 若都滿，找最快空出來的
+            if (chosenLaneIndex === -1) {
+                let minTime = Infinity;
+                for (let i = 0; i < laneNextAvailable.length; i++) {
+                    if (laneNextAvailable[i] < minTime) {
+                        minTime = laneNextAvailable[i];
+                        chosenLaneIndex = i;
+                    }
+                }
+            }
+
+            el.style.left = marqueeLanes[chosenLaneIndex] + '%';
+            // 設定冷卻時間 (2.5秒後該跑道才可再用)
+            laneNextAvailable[chosenLaneIndex] = now + 2500;
+
             container.appendChild(el);
             setTimeout(() => { el.remove(); }, 16000);
         }
