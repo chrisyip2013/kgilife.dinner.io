@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (Logo精準映射版)</title>
+    <title>凱基永續．共築願景 (Logo對角線拼接版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -101,10 +101,9 @@
             background-color: rgba(0, 15, 30, 0.6);
             border: 1px solid rgba(0, 150, 255, 0.2);
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-            border-radius: 4px; /* 方形導角 */
-            position: relative;
+            border-radius: 6px; position: relative;
             animation: unstableEnergy 0.8s infinite alternate steps(5);
-            transition: transform 0.3s, background 0.3s, border-color 0.3s;
+            transition: transform 0.3s;
         }
         .piece:nth-child(odd) { animation-delay: 0.2s; } .piece:nth-child(3n) { animation-duration: 1.2s; } .piece:nth-child(5n) { animation-delay: 0.5s; animation-duration: 0.6s; }
         @keyframes unstableEnergy {
@@ -115,58 +114,29 @@
 
         /* VIP 星星 */
         .piece.vip-star {
-            border-radius: 0; /* 星星不需要圓角 */
             background-color: rgba(60, 50, 0, 0.8); border: 1px solid rgba(255, 215, 0, 0.3);
             clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
             box-shadow: none; transform: scale(1.1);
         }
 
-        /* === 激活狀態通用設定 === */
+        /* === [修改] 激活狀態通用基礎 === */
         .piece.active {
-            z-index: 100; transform: scale(1.05) translateZ(4vh); 
+            z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
-            border-width: 2px !important;
-            border-style: solid !important;
-            box-shadow: 0 0 20px rgba(255,255,255,0.5) !important; /* 基本發光 */
+            /* 移除固定的邊框和陰影，改由 JS 動態設定背景 */
+            border: none !important;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.3);
         }
 
-        /* === [關鍵] Logo 色彩映射樣式 (單色) === */
-        .c-blue { background: var(--kgi-blue) !important; border-color: var(--kgi-blue) !important; box-shadow: 0 0 30px var(--kgi-blue) !important; }
-        .c-orange { background: var(--kgi-orange) !important; border-color: var(--kgi-orange) !important; box-shadow: 0 0 30px var(--kgi-orange) !important; }
-        .c-green { background: var(--kgi-green) !important; border-color: var(--kgi-green) !important; box-shadow: 0 0 30px var(--kgi-green) !important; }
-        .c-white { background: var(--kgi-white) !important; border-color: var(--kgi-white) !important; box-shadow: 0 0 30px var(--kgi-white) !important; }
-
-        /* === [關鍵] Logo 對角線切割樣式 (線性漸層) === */
-        /* 左上：藍/橘對切 (135deg) */
-        .split-bo {
-            background: linear-gradient(135deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important;
-            border-color: var(--kgi-blue) !important;
-        }
-        /* 左下：橘/藍對切 (135deg) */
-        .split-ob {
-            background: linear-gradient(135deg, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important;
-            border-color: var(--kgi-orange) !important;
-        }
-        /* 右上：綠/藍對切 (45deg) */
-        .split-gb {
-            background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-green) 50%) !important;
-            border-color: var(--kgi-green) !important;
-        }
-        /* 右下：白/藍對切 (45deg) */
-        .split-wb {
-            background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important;
-            border-color: var(--kgi-white) !important;
-        }
-
-
-        /* VIP 星星激活 */
+        /* VIP 星星激活 (維持金色) */
         .piece.vip-star.active {
             background: #fff !important; 
-            filter: drop-shadow(0 0 10px var(--kgi-gold)) drop-shadow(0 0 30px var(--kgi-gold)) drop-shadow(0 0 50px orange);
+            filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 30px #ffd700) drop-shadow(0 0 50px orange);
             z-index: 150; transform: scale(1.5) translateZ(10vh);
             animation: starPulse 1s infinite alternate !important;
+            box-shadow: none; /* 移除通用陰影 */
         }
-        @keyframes starPulse { from { filter: drop-shadow(0 0 20px var(--kgi-gold)); } to { filter: drop-shadow(0 0 50px var(--kgi-gold)) drop-shadow(0 0 80px white); } }
+        @keyframes starPulse { from { filter: drop-shadow(0 0 20px #ffd700); } to { filter: drop-shadow(0 0 50px #ffd700) drop-shadow(0 0 80px white); } }
         @keyframes activePlasma { from { filter: brightness(1); } to { filter: brightness(1.3) contrast(1.2); } }
 
         /* 特效 */
@@ -301,8 +271,13 @@
         let hasAutoDownloaded = false; 
         let clickCount = 0; 
 
+        // KGI Logo 品牌色 HEX 代碼
         const kgiColors = {
-            orange: '#f05a22', green: '#6abf4b', blue: '#0056b8', white: '#ffffff', gold: '#ffd700'
+            orange: '#f05a22',
+            green: '#6abf4b',
+            blue: '#0056b8',
+            white: '#ffffff',
+            gold: '#ffd700'
         };
 
         function initBuilding() {
@@ -313,11 +288,17 @@
             buildingMap.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
                     const div = document.createElement('div');
-                    div.dataset.row = rowIndex; div.dataset.col = colIndex;
+                    // 儲存座標資訊
+                    div.dataset.row = rowIndex;
+                    div.dataset.col = colIndex;
+
                     if (cell === 1) {
-                        div.classList.add('piece'); pieces.push(div); building.appendChild(div); totalPieces++;
+                        div.classList.add('piece'); 
+                        pieces.push(div); building.appendChild(div); totalPieces++;
                     } else if (cell === 2) {
-                        div.classList.add('piece', 'vip-star'); div.dataset.vip = "true"; pieces.push(div); building.appendChild(div); totalPieces++;
+                        div.classList.add('piece', 'vip-star'); 
+                        div.dataset.vip = "true"; 
+                        pieces.push(div); building.appendChild(div); totalPieces++;
                     } else {
                         div.classList.add('spacer'); building.appendChild(div);
                     }
@@ -343,47 +324,45 @@
             return vipIndices[0]; 
         }
 
-        // === [關鍵] 根據座標判斷 Logo 顏色與切割方式 ===
-        function getColorClassByPosition(pieceElement) {
-            const row = parseInt(pieceElement.dataset.row);
-            const col = parseInt(pieceElement.dataset.col);
-            // 定義中心點與對角線閾值 (微調以適應大樓形狀)
-            const midRow = 5; const midCol = 4;
-            // 左上象限
-            if (row <= midRow && col <= midCol) {
-                if (col > row * 0.8 ) return 'c-blue';
-                if (col < row * 0.8 - 1) return 'c-orange';
-                return 'split-bo'; // 對角線
-            }
-            // 右上象限
-            else if (row <= midRow && col > midCol) {
-                if (col < 8 - (row * 0.8)) return 'c-green';
-                if (col > 8 - (row * 0.8) + 1) return 'c-blue';
-                return 'split-gb'; // 對角線
-            }
-            // 左下象限
-            else if (row > midRow && col <= midCol) {
-                if (col < row * 0.8 - 2) return 'c-orange';
-                if (col > row * 0.8 - 1) return 'c-blue';
-                return 'split-ob'; // 對角線
-            }
-            // 右下象限
-            else {
-                if (col > 8 - (row * 0.8) + 2) return 'c-blue';
-                if (col < 8 - (row * 0.8) + 1) return 'c-white';
-                return 'split-wb'; // 對角線
+        // === [核心修改] 根據位置決定對角線漸層樣式 ===
+        function getCellStyle(row, col) {
+            // 定義區域邊界
+            const isLeft = col < 4;
+            const isTop = row < 6;
+            const isMiddle = col === 4;
+
+            if (isMiddle) {
+                // 中軸：全白
+                return {
+                    background: kgiColors.white,
+                    explosion: kgiColors.white
+                };
+            } else if (isLeft) {
+                // 左側 (上下皆同)：藍/橘 對角線
+                return {
+                    // to bottom right 代表從左上到右下的漸層
+                    background: `linear-gradient(to bottom right, ${kgiColors.blue} 50%, ${kgiColors.orange} 50%)`,
+                    explosion: kgiColors.orange // 爆炸取主色橘色
+                };
+            } else {
+                // 右側
+                if (isTop) {
+                    // 右上：綠/藍 對角線
+                    return {
+                        background: `linear-gradient(to bottom right, ${kgiColors.green} 50%, ${kgiColors.blue} 50%)`,
+                        explosion: kgiColors.green // 爆炸取主色綠色
+                    };
+                } else {
+                    // 右下：白/藍 對角線
+                    return {
+                        background: `linear-gradient(to bottom right, ${kgiColors.white} 50%, ${kgiColors.blue} 50%)`,
+                        explosion: kgiColors.blue // 爆炸取主色藍色
+                    };
+                }
             }
         }
 
-        // 根據 Class 名稱取得主色 (用於爆炸特效)
-        function getHexFromClass(className) {
-            if (className.includes('blue')) return kgiColors.blue;
-            if (className.includes('orange')) return kgiColors.orange;
-            if (className.includes('green')) return kgiColors.green;
-            if (className.includes('white')) return kgiColors.white;
-            return kgiColors.white;
-        }
-
+        // === 炸裂特效 ===
         function triggerEnergyExplosion(targetElement, colorHex) {
             const rect = targetElement.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -409,19 +388,24 @@
 
             const particleCount = 60;
             const colors = [colorHex, '#ffffff', colorHex];
+            
             for (let i = 0; i < particleCount; i++) {
                 const p = document.createElement('div');
                 p.classList.add('explosion-particle');
                 p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 p.style.setProperty('--color', p.style.backgroundColor);
-                p.style.left = centerX + 'px'; p.style.top = centerY + 'px';
+                p.style.left = centerX + 'px';
+                p.style.top = centerY + 'px';
                 document.body.appendChild(p);
+
                 const angle = Math.random() * Math.PI * 2;
                 const velocity = 150 + Math.random() * 900; 
-                const destX = Math.cos(angle) * velocity; const destY = Math.sin(angle) * velocity;
+                const destX = Math.cos(angle) * velocity;
+                const destY = Math.sin(angle) * velocity;
                 const rotation = Math.random() * 720;
+
                 p.animate([
-                    { transform: `translate(0,0) scale(1) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate(0,0) scale(1) scale(0) rotate(0deg)`, opacity: 1 },
                     { transform: `translate(${destX}px, ${destY}px) scale(0) rotate(${rotation}deg)`, opacity: 0 }
                 ], { duration: 800 + Math.random() * 400, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' }).onfinish = () => p.remove();
             }
@@ -451,12 +435,17 @@
             link.setAttribute("href", url);
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
             link.setAttribute("download", `KGI_祝福紀錄_${timestamp}.csv`);
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function manualDownloadBackup() {
             clickCount++;
-            if (clickCount === 3) { if(confirm("強制下載紀錄？")) exportToCSV(); clickCount = 0; }
+            if (clickCount === 3) {
+                if(confirm("強制下載紀錄？")) exportToCSV();
+                clickCount = 0;
+            }
             setTimeout(() => { clickCount = 0; }, 2000);
         }
 
@@ -476,8 +465,8 @@
 
             const isVipUser = name.includes("董事長") || name.includes("總經理");
             let targetIndex = -1;
-            let finalColorHex = kgiColors.white;
-            let colorClass = '';
+            let finalColorHex = kgiColors.white; 
+            let cellStyle = null;
 
             if (isVipUser) {
                 targetIndex = getVipEmptyIndex();
@@ -486,17 +475,22 @@
             } else {
                 targetIndex = getRandomEmptyIndex();
                 if (targetIndex !== -1) {
-                    // 根據座標決定顏色 Class
-                    colorClass = getColorByPosition(pieces[targetIndex]);
-                    // 根據 Class 決定爆炸顏色
-                    finalColorHex = getHexFromClass(colorClass);
+                    // [核心修改] 取得該位置的對角線樣式
+                    const targetPiece = pieces[targetIndex];
+                    cellStyle = getCellStyle(parseInt(targetPiece.dataset.row), parseInt(targetPiece.dataset.col));
+                    finalColorHex = cellStyle.explosion;
                 }
             }
 
             if (targetIndex !== -1) {
                 const targetPiece = pieces[targetIndex];
                 targetPiece.classList.add('active');
-                if (colorClass) targetPiece.classList.add(colorClass);
+                
+                // [核心修改] 如果有計算出樣式，則應用背景漸層
+                if (cellStyle) {
+                    targetPiece.style.background = cellStyle.background;
+                }
+
                 filledCount++;
                 
                 triggerEnergyExplosion(targetPiece, finalColorHex);
@@ -527,7 +521,6 @@
             pieces.forEach((p, i) => {
                 setTimeout(() => {
                     p.style.transform = 'scale(1.5) translateZ(150px)';
-                    // 完成時統一閃爍品牌藍與青色，避免顏色過雜
                     p.style.boxShadow = '0 0 100px white, 0 0 150px var(--neon-cyan)';
                     p.style.zIndex = 200;
                     setTimeout(() => {
