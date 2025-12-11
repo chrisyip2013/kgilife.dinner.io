@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (KGI Logo 最終修正版)</title>
+    <title>凱基永續．共築願景 (座標精修版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
             --bg-color: #000510;
             --neon-cyan: #00ffff;
-            --sidebar-bg: rgba(3, 10, 20, 0.9);
             
-            /* KGI Logo 品牌標準色 */
-            --kgi-blue: #00479d;   /* 深藍 */
-            --kgi-orange: #f58025; /* 橘色 */
-            --kgi-green: #5cba46;  /* 綠色 */
-            --kgi-white: #ffffff;  /* 白色 */
-            --vip-gold: #ffd700;   /* VIP 金 */
+            /* KGI 品牌色 */
+            --kgi-blue: #00479d;   
+            --kgi-orange: #f58025; 
+            --kgi-green: #5cba46;  
+            --kgi-white: #ffffff;  
+            --vip-gold: #ffd700;   
             
             /* 格子尺寸 */
             --grid-size: min(8.2vh, 8.2vw); 
@@ -96,7 +95,7 @@
 
         .building-grid { display: grid; gap: 0.5vh; margin: 0 auto; }
 
-        /* === 基礎格子 === */
+        /* === 格子基礎 === */
         .piece {
             width: var(--grid-size); height: var(--grid-size);
             background-color: rgba(0, 15, 30, 0.6);
@@ -106,7 +105,6 @@
             animation: unstableEnergy 0.8s infinite alternate steps(5);
             transition: transform 0.3s;
         }
-        .piece:nth-child(odd) { animation-delay: 0.2s; } .piece:nth-child(3n) { animation-duration: 1.2s; } 
         @keyframes unstableEnergy {
             0% { border-color: rgba(0, 150, 255, 0.2); }
             100% { border-color: rgba(0, 255, 255, 0.4); box-shadow: inset 0 0 10px var(--kgi-blue); }
@@ -119,32 +117,39 @@
             box-shadow: none; transform: scale(1.1);
         }
 
-        /* === 激活狀態 === */
         .piece.active {
             z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
-            border-width: 0 !important; /* 滿版色彩，移除邊框 */
+            border-width: 0 !important;
         }
 
-        /* === KGI Logo 定義色 === */
+        /* === 顏色定義 === */
         .c-blue { background: var(--kgi-blue) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .c-orange { background: var(--kgi-orange) !important; box-shadow: 0 0 30px var(--kgi-orange); }
         .c-green { background: var(--kgi-green) !important; box-shadow: 0 0 30px var(--kgi-green); }
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
-        /* === 漸層斜切 (Gradient Splits) === */
-        /* 上半部標準 45度切分 */
-        .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
+        /* === 特殊斜切定義 (根據您的座標需求) === */
+        /* 左下對角線：上藍下橘 (135度) */
+        .split-blue-orange-diag { 
+            background: linear-gradient(135deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; 
+            box-shadow: 0 0 30px var(--kgi-orange);
+        }
+        /* 右下對角線：上白下藍 (-135度/225度) */
+        .split-white-blue-diag { 
+            background: linear-gradient(225deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; 
+            box-shadow: 0 0 30px var(--kgi-blue);
+        }
+        /* 中軸垂直切分：左橘右白 */
+        .split-vert-orange-white { 
+            background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important; 
+        }
+        /* 中軸水平切分：上藍下白 */
+        .split-horz-blue-white {
+            background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important;
+        }
+        /* 上半部舊有的切分 (維持原樣) */
         .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
-        
-        /* [新增] 下半部陡峭切分 (配合 9x11 長方形比例，角度約 141deg 和 39deg) */
-        .split-orange-blue-steep { background: linear-gradient(141deg, var(--kgi-orange) 44%, var(--kgi-blue) 56%) !important; }
-        .split-white-blue-steep { background: linear-gradient(39deg, var(--kgi-white) 44%, var(--kgi-blue) 56%) !important; }
-
-        /* 中軸線漸層 */
-        .split-horz-blue-white { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; }
-        .split-vert-orange-white { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important; }
-
 
         .piece.vip-star.active {
             background: #fff !important; 
@@ -300,6 +305,7 @@
             buildingMap.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
                     const div = document.createElement('div');
+                    // [修改] 傳入 colIndex, rowIndex 進行精準判斷
                     const colorClass = determineLogoColor(colIndex, rowIndex);
                     div.dataset.colorClass = colorClass;
 
@@ -317,71 +323,92 @@
             });
         }
 
-        // === [核心修正] 9x11 格點 Logo 精準映射邏輯 ===
+        // === [核心修正] 9x11 精準坐標強制對應 (Hardcoded Map) ===
+        // 依據您的指示，針對特定格子回傳指定的 class
         function determineLogoColor(col, row) {
-            // 座標系統：Col 0-8 (共9欄), Row 0-10 (共11列)
-            // 中心點參考：Col 4, Row 5
-
-            // === [修正要求 3] 正中間最底下兩格為藍色 ===
-            if (col === 4 && row >= 9) return 'c-blue';
-
-            // === 中軸線處理 (Col 4 & Row 5) ===
-            if (col === 4) {
-                if (row < 5) return 'c-blue'; // 上半部中軸：藍
-                if (row === 5) return 'split-vert-orange-white'; // 中心點：左橘右白
-                // 下半部中軸 (Row 6-8)：左橘右白，直到 Row 9 被上方規則覆蓋為藍
-                return 'split-vert-orange-white'; 
-            }
-            if (row === 5) {
-                // === [修正要求 4] 中間分線左側純橘 ===
-                if (col < 4) return 'c-orange'; 
-                if (col > 4) return 'split-horz-blue-white'; // 右半橫線：上藍下白
-            }
-
-            // === 四大象限與對角線 (使用直線公式 y = mx + b 計算) ===
-            // 由於是 9x11 長方形，斜率 m 約為 1.25，需要使用較陡的漸層
-
-            // 1. 左上象限 (Top-Left) & 2. 右上象限 (Top-Right)
-            // 上半部較接近正方形，維持原本簡單判斷效果尚可，且使用者未提出上半部問題，暫不變動以降低風險。
-            if (row < 5) {
-                if (col < 4) { // 左上：藍/橘
-                    if (col + row <= 3) return 'c-blue';
-                    if (col + row === 4) return 'split-blue-orange-diag';
-                    return 'c-orange';
-                } else { // 右上：綠/藍
-                    if ((col - 4) - row >= 1) return 'c-green';
-                    if ((col - 4) - row === 0) return 'split-blue-green-diag';
-                    return 'c-blue';
-                }
-            }
-
-            // === [修正要求 1, 2, 4B] 下半部陡峭對角線 ===
-            if (row > 5) {
-                 // 設定誤差容許值，決定哪些格子位於對角線上
-                const tolerance = 0.6;
-
-                // 3. 左下象限 (Bottom-Left)：橘/藍
-                // 理想直線通過 (0, 5) 和 (4, 10)。斜率 m = 5/4 = 1.25
-                // 公式: row = 1.25 * col + 5
-                if (col < 4) { 
-                    const targetRow = 1.25 * col + 5;
-                    if (row < targetRow - tolerance) return 'c-orange'; // 直線上方
-                    if (row > targetRow + tolerance) return 'c-blue';   // 直線下方
-                    return 'split-orange-blue-steep'; // 直線上，使用陡峭漸層
-                }
-                
-                // 4. 右下象限 (Bottom-Right)：白/藍
-                // 理想直線通過 (8, 5) 和 (4, 10)。斜率 m = -5/4 = -1.25
-                // 公式: row - 10 = -1.25 * (col - 4)  =>  row = -1.25 * col + 15
-                if (col > 4) {
-                    const targetRow = -1.25 * col + 15;
-                    if (row < targetRow - tolerance) return 'c-white'; // 直線上方
-                    if (row > targetRow + tolerance) return 'c-blue';  // 直線下方
-                    return 'split-white-blue-steep'; // 直線上，使用陡峭漸層
-                }
-            }
             
-            return 'c-blue'; // Fallback 安全措施
+            // 坐標 Key (c,r)
+            const key = `${col},${row}`;
+
+            // === 1. 左下對角線 (下橘上藍) ===
+            // 坐標: (0,6), (1,7), (2,8), (3,9) => 注意：您的指示 (1,7) 對應代碼 (0,6)
+            // (1,7) -> c0,r6
+            // (2,8) -> c1,r7
+            // (3,9) -> c2,r8
+            // (4,10) -> c3,r9
+            if (key === '0,6' || key === '1,7' || key === '2,8' || key === '3,9') {
+                return 'split-blue-orange-diag'; // 上藍下橘 (CSS: 135deg Blue 50%, Orange 50%)
+            }
+
+            // === 2. 純橘色格子 ===
+            // (2,7) -> c1,r6
+            // (3,8) -> c2,r7
+            if (key === '1,6' || key === '2,7') {
+                return 'c-orange';
+            }
+
+            // === 3. 右下對角線 (下藍上白) ===
+            // (9,7) -> c8,r6
+            // (8,8) -> c7,r7
+            // (7,9) -> c6,r8
+            // (6,10) -> c5,r9
+            if (key === '8,6' || key === '7,7' || key === '6,8' || key === '5,9') {
+                return 'split-white-blue-diag'; // 上白下藍 (CSS: 225deg White 50%, Blue 50%)
+            }
+
+            // === 4. 純白色格子 ===
+            // (8,7) -> c7,r6
+            // (7,8) -> c6,r7
+            if (key === '7,6' || key === '6,7') {
+                return 'c-white';
+            }
+
+            // === 5. 中軸線 (Col 4) 特殊處理 ===
+            if (col === 4) {
+                // 正中間最底下兩格 -> 純藍 (4,9) (4,10) -> code: c4,r9 & c4,r10
+                // 您的指示: "倒數一、二格調整為藍色" (即 Row 9, Row 10)
+                if (row >= 9) return 'c-blue';
+                // 上半部中軸 -> 純藍
+                if (row < 5) return 'c-blue';
+                // 正中心點 (Row 5) -> 左橘右白
+                if (row === 5) return 'split-vert-orange-white';
+                // 下半部其他中軸 (Row 6,7,8) -> 左橘右白 (維持連續性)
+                return 'split-vert-orange-white';
+            }
+
+            // === 6. 橫向中軸 (Row 5) ===
+            if (row === 5) {
+                // 左方分線 -> 純橘
+                if (col < 4) return 'c-orange';
+                // 右方分線 -> 上藍下白
+                if (col > 4) return 'split-horz-blue-white';
+            }
+
+            // === 7. 其餘區域 (維持四大象限邏輯) ===
+            // 左上 (Top-Left)
+            if (col < 4 && row < 5) {
+                if (col + row <= 3) return 'c-blue';
+                if (col + row === 4) return 'split-blue-orange-diag';
+                return 'c-orange';
+            }
+            // 右上 (Top-Right)
+            if (col > 4 && row < 5) {
+                if ((col - 4) - row >= 1) return 'c-green';
+                if ((col - 4) - row === 0) return 'split-blue-green-diag';
+                return 'c-blue';
+            }
+            // 左下 (Bottom-Left) 其餘
+            if (col < 4 && row > 5) {
+                // 剩下的基本上都是藍色 (三角形下方)
+                return 'c-blue';
+            }
+            // 右下 (Bottom-Right) 其餘
+            if (col > 4 && row > 5) {
+                // 剩下的基本上都是藍色 (三角形下方)
+                return 'c-blue';
+            }
+
+            return 'c-blue'; // Default
         }
 
         function getHexFromClass(className) {
