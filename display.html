@@ -529,26 +529,39 @@
             setTimeout(() => { clickCount = 0; }, 2000);
         }
 
-        function onMessageReceived(name, msg) {
+        // === [修改後] 訊息接收處理邏輯 ===
+        function onMessageReceived(name, msg, data) { // 注意：這裡多接收一個 data 參數 (整包 JSON)
+            // 如果 data 未定義 (相容舊版代碼)，嘗試從參數讀取
+            // 為了保險，我們直接在 mqtt callback 那邊改，這裡先處理邏輯
+            
             const now = new Date();
             const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
             blessingHistory.push({ time: timeStr, name: name, msg: msg });
             addToSidebar(name, msg);
 
-            if (name.includes("董事長")) vipStatus.chairman = true;
-            if (name.includes("總經理")) vipStatus.gm = true;
-            if (vipStatus.chairman && vipStatus.gm && !hasAutoDownloaded) {
-                setTimeout(() => { exportToCSV(); hasAutoDownloaded = true; }, 3000);
+            // === [關鍵修改] 改用 isVip 旗標判斷，而非名字字串 ===
+            // 只有從 vip.html 發送的訊號，data.isVip 才會是 true
+            const isVipUser = (data && data.isVip === true); 
+
+            if (isVipUser) {
+                // 根據 vipRole 標記狀態
+                if (data.vipRole === 'chairman') vipStatus.chairman = true;
+                if (data.vipRole === 'gm') vipStatus.gm = true;
+                
+                // 檢查是否兩位都講過話，觸發下載
+                if (vipStatus.chairman && vipStatus.gm && !hasAutoDownloaded) {
+                    setTimeout(() => { exportToCSV(); hasAutoDownloaded = true; }, 3000);
+                }
             }
 
             if (filledCount >= totalPieces) return;
 
-            const isVipUser = name.includes("董事長") || name.includes("總經理");
             let targetIndex = -1;
             let finalColorHex = '#ffffff'; 
 
             if (isVipUser) {
                 targetIndex = getVipEmptyIndex();
+                // 如果長官不小心多按，星星滿了就填一般格子
                 if (targetIndex === -1) targetIndex = getRandomEmptyIndex();
                 finalColorHex = kgiColors.gold;
             } else {
@@ -565,7 +578,6 @@
                 targetPiece.classList.add('active');
                 filledCount++;
                 
-                // 傳入 isVip 參數來決定是否觸發閃光與加強粒子
                 triggerEnergyExplosion(targetPiece, isVipUser, finalColorHex);
                 showMarquee(`${name}：${msg}`);
 
@@ -633,7 +645,7 @@
         const clientID = "monitor_" + new Date().getTime();
         const client = new Paho.MQTT.Client(broker, port, clientID);
         client.onConnectionLost = function (res) { document.getElementById('statusDot').classList.remove('online'); document.getElementById('statusText').innerText = "連線中斷..."; setTimeout(connectMQTT, 2000); };
-        client.onMessageArrived = function (msg) { try { const data = JSON.parse(msg.payloadString); onMessageReceived(data.name, data.msg); } catch (e) {} };
+        client.onMessageArrived = function (msg) { try { const data = JSON.parse(msg.payloadString); onMessageReceived(data.name, data.msg, data);} catch (e) { console.error(e); }}; // [修改] 將整包 data 傳進去，才能讀取 isVip 欄位        
         function connectMQTT() {
             client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒 (${totalPieces}格)`; client.subscribe(topic); }, onFailure: function () {} });
         }
@@ -641,3 +653,4 @@
     </script>
 </body>
 </html>
+
