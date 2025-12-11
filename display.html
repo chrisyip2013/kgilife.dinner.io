@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (Logo 座標精修版)</title>
+    <title>凱基永續．共築願景 (Logo手動校正版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -123,30 +123,26 @@
             border-width: 0 !important;
         }
 
-        /* === 顏色樣式 === */
+        /* === 顏色定義 === */
         .c-blue { background: var(--kgi-blue) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .c-orange { background: var(--kgi-orange) !important; box-shadow: 0 0 30px var(--kgi-orange); }
         .c-green { background: var(--kgi-green) !important; box-shadow: 0 0 30px var(--kgi-green); }
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
         /* === 漸層修正 === */
-        /* 左上對角線 */
         .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
-        /* 右上對角線 */
         .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
         
-        /* [修正] 左下對角線 (反向)：左上藍/右下橘 */
-        .fix-left-diag { background: linear-gradient(135deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; box-shadow: 0 0 30px var(--kgi-orange); }
-        
-        /* [修正] 右下對角線 (反向)：右上藍/左下白 */
-        .fix-right-diag { background: linear-gradient(225deg, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
+        /* [修正 1] 左下藍橘反轉斜線: 45deg (右上藍, 左下橘) */
+        /* 對角線角度調整以符合視覺 */
+        .split-blue-orange-rev { background: linear-gradient(45deg, var(--kgi-orange) 45%, var(--kgi-blue) 55%) !important; }
 
-        /* [修正] 中間分線最左格：上橘下藍 */
-        .split-horz-orange-blue { background: linear-gradient(to bottom right, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important; }
+        /* [修正 3] 右下藍白反轉斜線: 135deg (左上藍, 右下白) */
+        .split-blue-white-rev { background: linear-gradient(135deg, var(--kgi-blue) 45%, var(--kgi-white) 55%) !important; }
 
-        /* 中軸線 */
+        /* 中軸 */
+        .split-horz-blue-orange { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; }
         .split-horz-blue-white { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; }
-        .split-vert-orange-white { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important; }
         .split-vert-orange-blue { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important; }
 
         .piece.vip-star.active {
@@ -320,73 +316,54 @@
             });
         }
 
-        // === [核心修正] 9x11 格點 Logo 映射 (含強制指定) ===
+        // === [手動強制校正] 9x11 Logo 映射邏輯 ===
         function determineLogoColor(col, row) {
-            // col 0~8 (9), row 0~10 (11)
+            // === [校正 1] 左下對角線 (1,7)... ===
+            if (col === 0 && row === 6) return 'split-blue-orange-rev';
+            if (col === 1 && row === 7) return 'split-blue-orange-rev';
+            if (col === 2 && row === 8) return 'split-blue-orange-rev';
+            if (col === 3 && row === 9) return 'split-blue-orange-rev';
 
-            // 1. 強制修正區 (Manual Overrides)
-            
-            // 左下橘色補洞：(2,7) -> c1r6, (3,8) -> c2r7
+            // === [校正 2] 左下補橘色 ===
             if (col === 1 && row === 6) return 'c-orange';
             if (col === 2 && row === 7) return 'c-orange';
 
-            // 左下對角線翻轉：(1,7)c0r6, (2,8)c1r7, (3,9)c2r8, (4,10)c3r9
-            if ((col === 0 && row === 6) || 
-                (col === 1 && row === 7) || 
-                (col === 2 && row === 8) || 
-                (col === 3 && row === 9)) {
-                return 'fix-left-diag'; // 左上藍、右下橘
-            }
+            // === [校正 3] 右下對角線 (9,7)... ===
+            if (col === 8 && row === 6) return 'split-blue-white-rev';
+            if (col === 7 && row === 7) return 'split-blue-white-rev';
+            if (col === 6 && row === 8) return 'split-blue-white-rev';
+            if (col === 5 && row === 9) return 'split-blue-white-rev';
 
-            // 右下白色補洞：(8,7) -> c7r6, (7,8) -> c6r7
+            // === [校正 4] 右下補白色 ===
             if (col === 7 && row === 6) return 'c-white';
             if (col === 6 && row === 7) return 'c-white';
 
-            // 右下對角線翻轉：(9,7)c8r6, (8,8)c7r7, (7,9)c6r8, (6,10)c5r9
-            if ((col === 8 && row === 6) || 
-                (col === 7 && row === 7) || 
-                (col === 6 && row === 8) || 
-                (col === 5 && row === 9)) {
-                return 'fix-right-diag'; // 右上藍、左下白
-            }
-
-            // 底部中軸藍色：(5,10)c4r9, (5,11)c4r10
-            if (col === 4 && row >= 9) return 'c-blue';
-
-            // 中間分線左側最左格 (1,6) c0r5：上橘下藍斜切
-            if (col === 0 && row === 5) return 'split-horz-orange-blue';
-
-            // 2. 常規判斷區
-            
-            // 中軸線 Col 4
+            // === 中軸線強制設定 ===
             if (col === 4) {
-                if (row < 5) return 'c-blue';
-                if (row === 5) return 'split-vert-orange-white'; 
-                return 'split-vert-orange-white'; // Row 6~8
+                if (row < 5) return 'c-blue'; 
+                if (row >= 9) return 'c-blue'; // [保留] 底部藍
+                return 'split-vert-orange-blue'; // 中段
             }
-
-            // 中間分線 Row 5
             if (row === 5) {
-                if (col < 4) return 'c-orange'; // 左側純橘 (c0r5已被上方規則處理)
+                if (col < 4) return 'split-horz-blue-orange'; 
                 if (col > 4) return 'split-horz-blue-white';  
             }
 
-            // 四大象限剩餘部分
+            // === 其他通用邏輯 (保留以防萬一) ===
             if (row < 5) {
-                // 上半部維持原樣
-                if (col < 4) { 
+                if (col < 4) { // 左上
                     if (col + row <= 3) return 'c-blue';
                     if (col + row === 4) return 'split-blue-orange-diag';
                     return 'c-orange';
-                } else {
+                } else { // 右上
                     if ((col - 4) - row >= 1) return 'c-green';
                     if ((col - 4) - row === 0) return 'split-blue-green-diag';
                     return 'c-blue';
                 }
-            } else {
-                // 下半部 (非 override 部分)
-                if (col < 4) return 'c-blue'; // 左下其餘部分為藍
-                if (col > 4) return 'c-blue'; // 右下其餘部分為藍
+            }
+            if (row > 5) {
+                if (col < 4) return 'c-blue'; // 左下其餘藍
+                if (col > 4) return 'c-blue'; // 右下其餘藍
             }
             
             return 'c-blue'; 
