@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試控制台 (Debug Console)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h2 { border-bottom: 2px solid #555; padding-bottom: 10px; width: 100%; text-align: center; }
+        .status { margin-bottom: 20px; color: #888; font-size: 0.9rem; }
+        .online { color: #0f0; font-weight: bold; }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-normal { background: linear-gradient(90deg, #00479d, #0080ff); color: white; }
+        .btn-vip1 { background: linear-gradient(90deg, #ffd700, #ffaa00); color: black; }
+        .btn-vip2 { background: linear-gradient(90deg, #ffcc00, #ff8800); color: black; }
+        .btn-auto { background: linear-gradient(90deg, #f58025, #ff4500); color: white; }
+        .btn-stop { background: #555; color: white; }
+
+        .log-box {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            height: 200px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🛠️ KGI 拼圖測試控制台</h2>
+    <div id="status" class="status">連線中...</div>
+
+    <div class="btn-group">
+        <button class="btn-normal" onclick="sendRandomStaff()">👤 發送 1 筆隨機主管祝福</button>
+        <button class="btn-vip1" onclick="sendVIP('劉董事長')">⭐ 發送「劉董事長」 (觸發星星)</button>
+        <button class="btn-vip2" onclick="sendVIP('楊總經理')">⭐ 發送「楊總經理」 (觸發下載)</button>
+        
+        <hr style="width:100%; border-color:#333;">
+        
+        <button id="btnAuto" class="btn-auto" onclick="toggleAutoFill()">🚀 極速填滿 (每 0.1 秒一筆)</button>
+    </div>
+
+    <div class="log-box" id="logBox">
+        [System] 等待連線...
+    </div>
+
+    <script>
+        // === 設定 (需與 Display 一致) ===
+        const broker = "broker.emqx.io";
+        const port = 8084;
+        const topic = "kgi_event_2025_live_demo";
+        
+        // 模擬資料庫
+        const departments = ["財務部", "資訊處", "業務部", "行銷部", "人資部", "法遵部", "風險管理處", "投資部"];
+        const names = ["陳經理", "林協理", "黃副總", "張專員", "吳總監", "李副理", "蔡襄理"];
+        const messages = [
+            "業績長紅，再創高峰！", "凱基永續，共築未來！", "攜手前行，榮耀共享", 
+            "團隊同心，其利斷金", "創新突破，引領市場", "大家辛苦了，明年更好",
+            "穩健經營，基業長青", "數位轉型，效率倍增"
+        ];
+
+        let client;
+        let isConnected = false;
+        let autoTimer = null;
+
+        function connect() {
+            const clientID = "tester_" + new Date().getTime();
+            client = new Paho.MQTT.Client(broker, port, clientID);
+
+            client.onConnectionLost = (res) => {
+                document.getElementById('status').innerText = "❌ 連線中斷";
+                document.getElementById('status').className = "status";
+                isConnected = false;
+            };
+
+            client.connect({
+                useSSL: true,
+                onSuccess: () => {
+                    document.getElementById('status').innerText = "🟢 連線成功 (Ready)";
+                    document.getElementById('status').className = "status online";
+                    isConnected = true;
+                    log("MQTT 連線成功");
+                },
+                onFailure: (e) => {
+                    document.getElementById('status').innerText = "❌ 連線失敗";
+                    log("連線失敗: " + e.errorMessage);
+                }
+            });
+        }
+
+        // 發送訊息核心函數
+        function publish(name, msg) {
+            if (!isConnected) { alert("尚未連線"); return; }
+            
+            const payload = JSON.stringify({ name: name, msg: msg });
+            const message = new Paho.MQTT.Message(payload);
+            message.destinationName = topic;
+            client.send(message);
+            
+            log(`發送: ${name} - ${msg}`);
+        }
+
+        // 1. 發送隨機主管
+        function sendRandomStaff() {
+            const dept = departments[Math.floor(Math.random() * departments.length)];
+            const who = names[Math.floor(Math.random() * names.length)];
+            const text = messages[Math.floor(Math.random() * messages.length)];
+            publish(`${who} / ${dept}`, text);
+        }
+
+        // 2. 發送 VIP
+        function sendVIP(vipName) {
+            publish(vipName, "引領凱基，邁向卓越巔峰！");
+        }
+
+        // 3. 自動填滿
+        function toggleAutoFill() {
+            const btn = document.getElementById('btnAuto');
+            if (autoTimer) {
+                // 停止
+                clearInterval(autoTimer);
+                autoTimer = null;
+                btn.innerText = "🚀 極速填滿 (每 0.1 秒一筆)";
+                btn.className = "btn-auto";
+                btn.style.background = ""; // 恢復原色
+            } else {
+                // 開始
+                btn.innerText = "⏹ 停止發送";
+                btn.className = "btn-stop";
+                autoTimer = setInterval(() => {
+                    sendRandomStaff();
+                }, 100); // 速度：100ms 一筆
+            }
+        }
+
+        function log(txt) {
+            const box = document.getElementById('logBox');
+            const p = document.createElement('div');
+            p.innerText = `[${new Date().toLocaleTimeString()}] ${txt}`;
+            box.insertBefore(p, box.firstChild);
+        }
+
+        // 啟動連線
+        connect();
+
+    </script>
+</body>
+</html>
