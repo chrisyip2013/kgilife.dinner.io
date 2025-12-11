@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (Display 最終優化版)</title>
+    <title>凱基永續．共築願景 (VIP榮耀加強版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -29,6 +29,14 @@
             font-family: "Microsoft JhengHei", sans-serif;
             height: 100vh; overflow: hidden;
         }
+
+        /* === 全螢幕白光閃爍 (VIP專用) === */
+        #vip-flash-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; z-index: 9999;
+            transition: opacity 0.1s;
+        }
+        .flash-active { opacity: 0.8 !important; }
 
         /* === 全螢幕震動 === */
         .screen-shake {
@@ -113,56 +121,60 @@
         }
         .spacer { width: var(--grid-size); height: var(--grid-size); background: transparent; pointer-events: none; }
 
+        /* === VIP 星星 (升級版) === */
         .piece.vip-star {
-            background-color: rgba(60, 50, 0, 0.8); border: 1px solid rgba(255, 215, 0, 0.3);
+            /* 仿金屬黃金漸層 */
+            background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            box-shadow: none; transform: scale(1.1);
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
         }
 
-        /* === 激活狀態 === */
+        /* === 一般激活狀態 === */
         .piece.active {
             z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
             border-width: 0 !important;
         }
 
-        /* === KGI Logo 定義色 === */
+        /* === VIP 星星激活狀態 (超炫炮版) === */
+        .piece.vip-star.active {
+            background: radial-gradient(circle, #fff, #ffd700, #ff8c00) !important;
+            /* 強烈的黃金光暈 */
+            filter: drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 50px #ffaa00) drop-shadow(0 0 80px white);
+            z-index: 300; /* 最上層 */
+            /* 3D 旋轉 + 放大 2.5倍 */
+            transform: scale(2.5) translateZ(20vh) translateY(-2vh); 
+            animation: vipSpin 3s infinite linear !important;
+        }
+        
+        @keyframes vipSpin {
+            0% { transform: scale(2.5) translateZ(20vh) translateY(-2vh) rotateY(0deg); }
+            50% { transform: scale(2.8) translateZ(25vh) translateY(-2vh) rotateY(180deg); filter: drop-shadow(0 0 40px #ffd700) drop-shadow(0 0 80px #fff); }
+            100% { transform: scale(2.5) translateZ(20vh) translateY(-2vh) rotateY(360deg); }
+        }
+
+        /* Logo 顏色 */
         .c-blue { background: var(--kgi-blue) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .c-orange { background: var(--kgi-orange) !important; box-shadow: 0 0 30px var(--kgi-orange); }
         .c-green { background: var(--kgi-green) !important; box-shadow: 0 0 30px var(--kgi-green); }
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
-        /* === 特殊漸層斜切 === */
-        .split-diag-orange-blue { 
-            background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; 
-            box-shadow: 0 0 30px var(--kgi-blue);
-        }
-        .split-diag-white-blue { 
-            background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; 
-            box-shadow: 0 0 30px var(--kgi-blue);
-        }
+        /* 特殊漸層 */
+        .split-diag-orange-blue { background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
+        .split-diag-white-blue { background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
         .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
-        
-        /* 中軸線 */
         .split-horz-blue-orange { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; }
         .split-horz-blue-white { background: linear-gradient(to bottom, var(--kgi-blue) 50%, var(--kgi-white) 50%) !important; }
         .split-vert-orange-white { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-white) 50%) !important; }
         .split-vert-orange-blue { background: linear-gradient(to right, var(--kgi-orange) 50%, var(--kgi-blue) 50%) !important; }
-        .split-special-center {
-            background: conic-gradient(from 0deg at 50% 50%, var(--kgi-blue) 0% 25%, var(--kgi-white) 25% 50%, var(--kgi-orange) 50% 100%) !important;
-            box-shadow: 0 0 30px var(--kgi-white);
-        }
+        .split-special-center { background: conic-gradient(from 0deg at 50% 50%, var(--kgi-blue) 0% 25%, var(--kgi-white) 25% 50%, var(--kgi-orange) 50% 100%) !important; box-shadow: 0 0 30px var(--kgi-white); }
 
-        .piece.vip-star.active {
-            background: #fff !important; 
-            filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 30px #ffd700) drop-shadow(0 0 50px orange);
-            z-index: 150; transform: scale(1.5) translateZ(10vh);
-            animation: starPulse 1s infinite alternate !important;
-        }
-        @keyframes starPulse { from { filter: drop-shadow(0 0 20px #ffd700); } to { filter: drop-shadow(0 0 50px #ffd700) drop-shadow(0 0 80px white); } }
         @keyframes activePlasma { from { filter: brightness(1); } to { filter: brightness(1.2) contrast(1.1); } }
 
+        /* 特效粒子 */
         .explosion-particle {
             position: absolute; width: 12px; height: 12px; background: #ffffff; border-radius: 50%;
             box-shadow: 0 0 20px var(--color); pointer-events: none; z-index: 9999;
@@ -172,6 +184,7 @@
             border: 50px solid #ffffff; opacity: 1; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998;
         }
 
+        /* 側邊欄 */
         .sidebar {
             flex: 1; background: rgba(5, 15, 30, 0.85); border-left: 3px solid var(--kgi-blue);
             box-shadow: -20px 0 50px rgba(0, 100, 255, 0.2); display: flex; flex-direction: column; z-index: 50; backdrop-filter: blur(20px);
@@ -232,6 +245,7 @@
     </style>
 </head>
 <body>
+    <div id="vip-flash-overlay"></div>
     <div id="particles-js"></div>
     
     <div class="layout-wrapper">
@@ -270,17 +284,17 @@
         createWarpStars();
 
         const buildingMap = [
-            [0,0,0,2,0,2,0,0,0], // 0
-            [0,0,1,1,0,1,1,0,0], // 1
-            [0,1,1,1,0,1,1,1,0], // 2
-            [1,1,1,1,1,1,1,1,1], // 3
-            [1,1,1,1,1,1,1,1,1], // 4
-            [1,1,1,1,1,1,1,1,1], // 5
-            [1,1,1,1,1,1,1,1,1], // 6
-            [1,1,1,1,1,1,1,1,1], // 7
-            [1,1,1,1,1,1,1,1,1], // 8
-            [1,1,1,1,0,1,1,1,1], // 9
-            [1,1,1,0,0,0,1,1,1]  // 10
+            [0,0,0,2,0,2,0,0,0], 
+            [0,0,1,1,0,1,1,0,0], 
+            [0,1,1,1,0,1,1,1,0], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,1,1,1,1,1], 
+            [1,1,1,1,0,1,1,1,1], 
+            [1,1,1,0,0,0,1,1,1] 
         ];
         
         let totalPieces = 0;
@@ -291,10 +305,8 @@
         let vipStatus = { chairman: false, gm: false }; 
         let hasAutoDownloaded = false; 
         let clickCount = 0; 
-
-        // [新增] 彈幕跑道管理系統
-        const marqueeLanes = [5, 25, 45, 65]; // 定義 4 個水平跑道位置 (百分比)，最右邊保留給側邊欄不被遮擋
-        const laneNextAvailable = [0, 0, 0, 0]; // 記錄每個跑道何時可以再使用 (Timestamp)
+        const marqueeLanes = [5, 25, 45, 65]; 
+        const laneNextAvailable = [0, 0, 0, 0]; 
 
         const kgiColors = {
             orange: '#f58025',
@@ -329,7 +341,6 @@
             });
         }
 
-        // === Logo 邏輯 (維持原樣) ===
         function determineLogoColor(col, row) {
             if (col === 4) {
                 if (row < 3) return 'c-blue';
@@ -422,10 +433,17 @@
             return vipIndices[0]; 
         }
 
-        function triggerEnergyExplosion(targetElement, colorHex) {
+        function triggerEnergyExplosion(targetElement, isVip = false, colorHex) {
             const rect = targetElement.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
+
+            // 如果是 VIP，觸發全螢幕白光
+            if (isVip) {
+                const overlay = document.getElementById('vip-flash-overlay');
+                overlay.classList.add('flash-active');
+                setTimeout(() => overlay.classList.remove('flash-active'), 300);
+            }
 
             document.body.classList.remove('screen-shake');
             void document.body.offsetWidth;
@@ -445,8 +463,12 @@
                 { width: '2500px', height: '2500px', opacity: 0, borderWidth: '0px' }
             ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
-            const particleCount = 60;
+            // VIP 粒子加倍 (150顆)
+            const particleCount = isVip ? 150 : 60;
             const colors = [colorHex, '#ffffff', colorHex];
+            // VIP 額外加入金色粒子
+            if (isVip) colors.push('#ffd700', '#ffaa00');
+
             for (let i = 0; i < particleCount; i++) {
                 const p = document.createElement('div');
                 p.classList.add('explosion-particle');
@@ -457,7 +479,8 @@
                 document.body.appendChild(p);
 
                 const angle = Math.random() * Math.PI * 2;
-                const velocity = 150 + Math.random() * 900; 
+                // VIP 噴發更遠
+                const velocity = isVip ? (200 + Math.random() * 1200) : (150 + Math.random() * 900); 
                 const destX = Math.cos(angle) * velocity;
                 const destY = Math.sin(angle) * velocity;
                 const rotation = Math.random() * 720;
@@ -542,7 +565,8 @@
                 targetPiece.classList.add('active');
                 filledCount++;
                 
-                triggerEnergyExplosion(targetPiece, finalColorHex);
+                // 傳入 isVip 參數來決定是否觸發閃光與加強粒子
+                triggerEnergyExplosion(targetPiece, isVipUser, finalColorHex);
                 showMarquee(`${name}：${msg}`);
 
                 if (filledCount === totalPieces) {
@@ -554,7 +578,6 @@
             }
         }
 
-        // === [關鍵修改] 彈幕跑道邏輯 (防遮擋 + 防重疊) ===
         function showMarquee(text) {
             const container = document.getElementById('marqueeArea');
             const el = document.createElement('div');
@@ -563,10 +586,8 @@
             const colors = ['#fff', '#ffd700', '#7df9ff', '#ffb74d'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
 
-            // 跑道選擇邏輯
             const now = Date.now();
             let chosenLaneIndex = -1;
-            // 隨機檢查跑道
             const randomIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
             for (let i of randomIndices) {
                 if (now >= laneNextAvailable[i]) {
@@ -574,7 +595,6 @@
                     break;
                 }
             }
-            // 若都滿，找最快空出來的
             if (chosenLaneIndex === -1) {
                 let minTime = Infinity;
                 for (let i = 0; i < laneNextAvailable.length; i++) {
@@ -586,7 +606,6 @@
             }
 
             el.style.left = marqueeLanes[chosenLaneIndex] + '%';
-            // 設定冷卻時間 (2.5秒後該跑道才可再用)
             laneNextAvailable[chosenLaneIndex] = now + 2500;
 
             container.appendChild(el);
@@ -622,4 +641,3 @@
     </script>
 </body>
 </html>
-
