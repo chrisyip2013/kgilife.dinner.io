@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (VIP榮耀加強版)</title>
+    <title>凱基永續．共築願景</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -69,12 +69,14 @@
 
         .layout-wrapper { display: flex; width: 100%; height: 100%; position: relative; z-index: 10; }
 
+        /* === 左側主顯示區 === */
         .main-display {
             flex: 3; position: relative;
             display: flex; justify-content: center; align-items: center; 
             background-image: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%), radial-gradient(transparent, black);
             background-size: 10px 10px, 100% 100%;
             perspective: 1200px; perspective-origin: 50% 90%; 
+            overflow: hidden; /* 確保彈幕不會跑出去 */
         }
 
         .title {
@@ -123,32 +125,25 @@
 
         /* === VIP 星星 (升級版) === */
         .piece.vip-star {
-            /* 仿金屬黃金漸層 */
             background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
             border: 1px solid rgba(255, 255, 255, 0.5);
             clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            transform: scale(1.1);
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+            transform: scale(1.1); filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
         }
 
-        /* === 一般激活狀態 === */
+        /* === 激活狀態 === */
         .piece.active {
             z-index: 100; transform: scale(1.1) translateZ(6vh); 
             animation: activePlasma 0.5s infinite alternate !important;
             border-width: 0 !important;
         }
 
-        /* === VIP 星星激活狀態 (超炫炮版) === */
         .piece.vip-star.active {
             background: radial-gradient(circle, #fff, #ffd700, #ff8c00) !important;
-            /* 強烈的黃金光暈 */
             filter: drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 50px #ffaa00) drop-shadow(0 0 80px white);
-            z-index: 300; /* 最上層 */
-            /* 3D 旋轉 + 放大 2.5倍 */
-            transform: scale(2.5) translateZ(20vh) translateY(-2vh); 
+            z-index: 300; transform: scale(2.5) translateZ(20vh) translateY(-2vh); 
             animation: vipSpin 3s infinite linear !important;
         }
-        
         @keyframes vipSpin {
             0% { transform: scale(2.5) translateZ(20vh) translateY(-2vh) rotateY(0deg); }
             50% { transform: scale(2.8) translateZ(25vh) translateY(-2vh) rotateY(180deg); filter: drop-shadow(0 0 40px #ffd700) drop-shadow(0 0 80px #fff); }
@@ -161,7 +156,7 @@
         .c-green { background: var(--kgi-green) !important; box-shadow: 0 0 30px var(--kgi-green); }
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
-        /* 特殊漸層 */
+        /* 漸層與特殊格 */
         .split-diag-orange-blue { background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .split-diag-white-blue { background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
@@ -223,9 +218,13 @@
         }
         .dot.online { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
 
+        /* === [關鍵] 彈幕容器 === */
         .marquee-container {
+            /* 寬度設為 100%，但裡面的跑道會限制位置 */
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 100;
         }
+        
+        /* === [關鍵] 彈幕樣式 === */
         .marquee-item {
             position: absolute; white-space: nowrap; font-size: 3rem; color: #fff;
             text-shadow: 0 0 15px var(--kgi-blue), 0 0 30px var(--neon-cyan);
@@ -233,8 +232,21 @@
             background: linear-gradient(90deg, var(--kgi-blue), #000); 
             border: 3px solid #ffffff; border-radius: 60px;
             box-shadow: 0 10px 50px rgba(0, 150, 255, 0.6);
+            /* 動畫 */
             animation: flyToTop 15s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
+        
+        /* VIP 彈幕專屬樣式 */
+        .marquee-item.vip-marquee {
+            background: linear-gradient(90deg, #ffd700, #b8860b);
+            border-color: #fff;
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 50px #ffd700;
+            z-index: 300 !important; /* 確保在最上層 */
+            transform: scale(1.2); /* 稍微大一點 */
+        }
+
         @keyframes flyToTop {
             0% { bottom: -150px; opacity: 0; transform: scale(0.5) rotate(-5deg); }
             10% { opacity: 1; transform: scale(1.2) rotate(0deg); }
@@ -305,7 +317,9 @@
         let vipStatus = { chairman: false, gm: false }; 
         let hasAutoDownloaded = false; 
         let clickCount = 0; 
-        const marqueeLanes = [5, 25, 45, 65]; 
+        
+        // [關鍵修改] 安全跑道：只使用左半邊 (0% ~ 50%)，確保不碰到右邊側欄
+        const marqueeLanes = [2, 18, 34, 50]; 
         const laneNextAvailable = [0, 0, 0, 0]; 
 
         const kgiColors = {
@@ -438,7 +452,6 @@
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
-            // 如果是 VIP，觸發全螢幕白光
             if (isVip) {
                 const overlay = document.getElementById('vip-flash-overlay');
                 overlay.classList.add('flash-active');
@@ -463,10 +476,8 @@
                 { width: '2500px', height: '2500px', opacity: 0, borderWidth: '0px' }
             ], { duration: 900, easing: 'ease-out' }).onfinish = () => shockwave.remove();
 
-            // VIP 粒子加倍 (150顆)
             const particleCount = isVip ? 150 : 60;
             const colors = [colorHex, '#ffffff', colorHex];
-            // VIP 額外加入金色粒子
             if (isVip) colors.push('#ffd700', '#ffaa00');
 
             for (let i = 0; i < particleCount; i++) {
@@ -479,7 +490,6 @@
                 document.body.appendChild(p);
 
                 const angle = Math.random() * Math.PI * 2;
-                // VIP 噴發更遠
                 const velocity = isVip ? (200 + Math.random() * 1200) : (150 + Math.random() * 900); 
                 const destX = Math.cos(angle) * velocity;
                 const destY = Math.sin(angle) * velocity;
@@ -497,7 +507,8 @@
             const card = document.createElement('div');
             card.classList.add('msg-card');
             const now = new Date();
-            card.innerHTML = `<div class="msg-name">${name}<span class="msg-time">${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}</span></div><div class="msg-content">${msg}</div>`;
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            card.innerHTML = `<div class="msg-name">${name}<span class="msg-time">${timeStr}</span></div><div class="msg-content">${msg}</div>`;
             list.insertBefore(card, list.firstChild);
         }
 
@@ -529,26 +540,17 @@
             setTimeout(() => { clickCount = 0; }, 2000);
         }
 
-        // === [修改後] 訊息接收處理邏輯 ===
-        function onMessageReceived(name, msg, data) { // 注意：這裡多接收一個 data 參數 (整包 JSON)
-            // 如果 data 未定義 (相容舊版代碼)，嘗試從參數讀取
-            // 為了保險，我們直接在 mqtt callback 那邊改，這裡先處理邏輯
-            
+        function onMessageReceived(name, msg, data) {
             const now = new Date();
             const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
             blessingHistory.push({ time: timeStr, name: name, msg: msg });
             addToSidebar(name, msg);
 
-            // === [關鍵修改] 改用 isVip 旗標判斷，而非名字字串 ===
-            // 只有從 vip.html 發送的訊號，data.isVip 才會是 true
             const isVipUser = (data && data.isVip === true); 
 
             if (isVipUser) {
-                // 根據 vipRole 標記狀態
                 if (data.vipRole === 'chairman') vipStatus.chairman = true;
                 if (data.vipRole === 'gm') vipStatus.gm = true;
-                
-                // 檢查是否兩位都講過話，觸發下載
                 if (vipStatus.chairman && vipStatus.gm && !hasAutoDownloaded) {
                     setTimeout(() => { exportToCSV(); hasAutoDownloaded = true; }, 3000);
                 }
@@ -561,7 +563,6 @@
 
             if (isVipUser) {
                 targetIndex = getVipEmptyIndex();
-                // 如果長官不小心多按，星星滿了就填一般格子
                 if (targetIndex === -1) targetIndex = getRandomEmptyIndex();
                 finalColorHex = kgiColors.gold;
             } else {
@@ -579,7 +580,8 @@
                 filledCount++;
                 
                 triggerEnergyExplosion(targetPiece, isVipUser, finalColorHex);
-                showMarquee(`${name}：${msg}`);
+                // 傳入 isVip 參數給 showMarquee
+                showMarquee(`${name}：${msg}`, isVipUser);
 
                 if (filledCount === totalPieces) {
                     setTimeout(() => {
@@ -590,35 +592,44 @@
             }
         }
 
-        function showMarquee(text) {
+        // === [關鍵修改] showMarquee: VIP 專屬通道 + 防擋安全跑道 ===
+        function showMarquee(text, isVip = false) {
             const container = document.getElementById('marqueeArea');
             const el = document.createElement('div');
             el.classList.add('marquee-item');
             el.innerText = text;
+            
             const colors = ['#fff', '#ffd700', '#7df9ff', '#ffb74d'];
             el.style.borderColor = colors[Math.floor(Math.random() * colors.length)];
 
-            const now = Date.now();
-            let chosenLaneIndex = -1;
-            const randomIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
-            for (let i of randomIndices) {
-                if (now >= laneNextAvailable[i]) {
-                    chosenLaneIndex = i;
-                    break;
-                }
-            }
-            if (chosenLaneIndex === -1) {
-                let minTime = Infinity;
-                for (let i = 0; i < laneNextAvailable.length; i++) {
-                    if (laneNextAvailable[i] < minTime) {
-                        minTime = laneNextAvailable[i];
+            if (isVip) {
+                // VIP 強制樣式與位置
+                el.classList.add('vip-marquee');
+                // VIP 固定在 25% (畫面中間偏左)，這是絕對安全區
+                el.style.left = '25%'; 
+            } else {
+                // 一般人使用安全跑道 (5, 20, 35, 50)
+                const now = Date.now();
+                let chosenLaneIndex = -1;
+                const randomIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+                for (let i of randomIndices) {
+                    if (now >= laneNextAvailable[i]) {
                         chosenLaneIndex = i;
+                        break;
                     }
                 }
+                if (chosenLaneIndex === -1) {
+                    let minTime = Infinity;
+                    for (let i = 0; i < laneNextAvailable.length; i++) {
+                        if (laneNextAvailable[i] < minTime) {
+                            minTime = laneNextAvailable[i];
+                            chosenLaneIndex = i;
+                        }
+                    }
+                }
+                el.style.left = marqueeLanes[chosenLaneIndex] + '%';
+                laneNextAvailable[chosenLaneIndex] = now + 2500;
             }
-
-            el.style.left = marqueeLanes[chosenLaneIndex] + '%';
-            laneNextAvailable[chosenLaneIndex] = now + 2500;
 
             container.appendChild(el);
             setTimeout(() => { el.remove(); }, 16000);
@@ -645,7 +656,15 @@
         const clientID = "monitor_" + new Date().getTime();
         const client = new Paho.MQTT.Client(broker, port, clientID);
         client.onConnectionLost = function (res) { document.getElementById('statusDot').classList.remove('online'); document.getElementById('statusText').innerText = "連線中斷..."; setTimeout(connectMQTT, 2000); };
-        client.onMessageArrived = function (msg) { try { const data = JSON.parse(msg.payloadString); onMessageReceived(data.name, data.msg, data);} catch (e) { console.error(e); }}; // [修改] 將整包 data 傳進去，才能讀取 isVip 欄位        
+        
+        client.onMessageArrived = function (msg) { 
+            try { 
+                const data = JSON.parse(msg.payloadString); 
+                // [注意] 這裡必須傳入整包 data 才能讀取 isVip
+                onMessageReceived(data.name, data.msg, data); 
+            } catch (e) { console.error(e); } 
+        };
+        
         function connectMQTT() {
             client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒 (${totalPieces}格)`; client.subscribe(topic); }, onFailure: function () {} });
         }
@@ -653,4 +672,3 @@
     </script>
 </body>
 </html>
-
