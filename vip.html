@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>長官專屬通道 - 凱基永續</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b1e36;
+            --vip-gold: #ffd700;
+            --vip-dark-gold: #b8860b;
+            --text-color: #fff;
+        }
+
+        body {
+            margin: 0; padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: "Microsoft JhengHei", sans-serif;
+            display: flex; flex-direction: column;
+            min-height: 100vh; box-sizing: border-box;
+            background-image: radial-gradient(circle at top, #1a3a5a 0%, #000 100%);
+        }
+
+        h2 {
+            text-align: center; color: var(--vip-gold);
+            margin-bottom: 30px; font-size: 1.8rem;
+            border-bottom: 2px solid var(--vip-dark-gold);
+            padding-bottom: 15px; text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; color: #e0e0e0; font-size: 1.1rem; }
+
+        /* 長官身分選擇器 */
+        .role-selector {
+            display: flex; gap: 15px; margin-bottom: 15px;
+        }
+        .role-btn {
+            flex: 1; padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #555; border-radius: 8px;
+            color: #aaa; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; transition: all 0.3s;
+            text-align: center;
+        }
+        .role-btn.selected {
+            background: linear-gradient(135deg, var(--vip-gold), var(--vip-dark-gold));
+            border-color: #fff; color: #000;
+            box-shadow: 0 0 15px var(--vip-gold);
+        }
+
+        input, textarea {
+            width: 100%; padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--vip-dark-gold);
+            color: var(--vip-gold);
+            border-radius: 8px; box-sizing: border-box;
+            font-size: 1.2rem; font-weight: bold;
+        }
+        input::placeholder { color: #666; font-weight: normal; }
+
+        button#sendBtn {
+            width: 100%; padding: 20px; margin-top: 30px;
+            border: none; border-radius: 50px;
+            cursor: pointer; font-weight: 900; font-size: 1.4rem;
+            background: linear-gradient(90deg, #ffecb3, var(--vip-gold), #ffecb3);
+            color: #333;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #555; color: #888; box-shadow: none; }
+
+        .status { text-align: center; margin-top: 20px; font-size: 0.9rem; color: #888; }
+        .success-msg {
+            display: none; text-align: center; margin-top: 20px; padding: 15px;
+            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--vip-gold);
+            border-radius: 8px; color: var(--vip-gold); font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>👑 願景啟動核心</h2>
+
+    <div class="input-group">
+        <label>請選擇您的身分</label>
+        <div class="role-selector">
+            <div class="role-btn" onclick="selectRole('chairman', '劉董事長')" id="btn-chairman">董事長</div>
+            <div class="role-btn" onclick="selectRole('gm', '楊總經理')" id="btn-gm">總經理</div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>顯示名稱</label>
+        <input type="text" id="name" readonly placeholder="請先選擇身分">
+    </div>
+
+    <div class="input-group">
+        <label>願景祝福</label>
+        <input type="text" id="msg" maxlength="20" placeholder="輸入祝福話語..." value="共創榮耀，永續未來！">
+    </div>
+
+    <button id="sendBtn" onclick="sendMessage()" disabled>✨ 啟動願景之星</button>
+
+    <div class="success-msg" id="successMsg">🌟 訊號已發送，請觀看大螢幕！</div>
+    <div class="status" id="status">正在連線至核心主機...</div>
+
+    <script>
+        // MQTT 設定
+        const broker = "broker.emqx.io";
+        const port = 8084;
+        const topic = "kgi_event_2025_live_demo";
+        const clientID = "vip_sender_" + new Date().getTime();
+        const client = new Paho.MQTT.Client(broker, port, clientID);
+        
+        let isConnected = false;
+        let selectedRoleKey = ""; // 'chairman' or 'gm'
+
+        // 連線
+        client.connect({
+            useSSL: true,
+            onSuccess: () => {
+                document.getElementById('status').innerText = "🟢 安全連線已建立";
+                isConnected = true;
+            },
+            onFailure: (e) => {
+                document.getElementById('status').innerText = "🔴 連線失敗，請重整";
+            }
+        });
+
+        function selectRole(key, nameText) {
+            selectedRoleKey = key;
+            
+            // UI 更新
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+            if(key === 'chairman') document.getElementById('btn-chairman').classList.add('selected');
+            if(key === 'gm') document.getElementById('btn-gm').classList.add('selected');
+
+            const nameInput = document.getElementById('name');
+            nameInput.value = nameText;
+            
+            // 啟用按鈕
+            document.getElementById('sendBtn').disabled = false;
+        }
+
+        function sendMessage() {
+            if (!isConnected) { alert("連線中，請稍後..."); return; }
+            if (!selectedRoleKey) { alert("請先選擇身分！"); return; }
+
+            const name = document.getElementById('name').value;
+            const msg = document.getElementById('msg').value;
+            const btn = document.getElementById('sendBtn');
+
+            // === [關鍵] VIP 專屬 Payload ===
+            // 帶有 isVip: true 和 vipRole 標記
+            const payload = JSON.stringify({ 
+                name: name, 
+                msg: msg, 
+                isVip: true,           // 讓 Display 識別這是 VIP
+                vipRole: selectedRoleKey // 讓 Display 知道是哪位長官 (chairman/gm)
+            });
+            
+            try {
+                const message = new Paho.MQTT.Message(payload);
+                message.destinationName = topic;
+                client.send(message);
+
+                btn.disabled = true;
+                btn.innerText = "發送中...";
+                
+                setTimeout(() => {
+                    document.getElementById('successMsg').style.display = 'block';
+                    btn.innerText = "✨ 再次啟動";
+                    btn.disabled = false;
+                }, 500);
+
+            } catch (e) {
+                alert("發送失敗，請重試");
+            }
+        }
+    </script>
+</body>
+</html>
