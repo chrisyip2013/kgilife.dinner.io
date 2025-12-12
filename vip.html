@@ -89,8 +89,13 @@
     <div class="input-group">
         <label>請選擇您的身分</label>
         <div class="role-selector">
-            <div class="role-btn" onclick="selectRole('chairman', '王董事長')" id="btn-chairman">董事長</div>
-            <div class="role-btn" onclick="selectRole('gm', '郭總經理')" id="btn-gm">總經理</div>
+            <div class="role-btn" 
+                 onclick="selectRole('chairman', '劉董事長', '引領凱基，邁向卓越巔峰！')" 
+                 id="btn-chairman">董事長</div>
+            
+            <div class="role-btn" 
+                 onclick="selectRole('gm', '楊總經理', '共創榮耀，永續未來！')" 
+                 id="btn-gm">總經理</div>
         </div>
     </div>
 
@@ -101,7 +106,7 @@
 
     <div class="input-group">
         <label>願景祝福</label>
-        <input type="text" id="msg" maxlength="20" placeholder="輸入祝福話語..." value="共創榮耀，永續未來！">
+        <input type="text" id="msg" maxlength="30" placeholder="選擇身分後自動帶入..." value="">
     </div>
 
     <button id="sendBtn" onclick="sendMessage()" disabled>✨ 啟動願景之星</button>
@@ -132,7 +137,8 @@
             }
         });
 
-        function selectRole(key, nameText) {
+        // [修改] 接收第三個參數 msgText
+        function selectRole(key, nameText, msgText) {
             selectedRoleKey = key;
             
             // UI 更新
@@ -140,8 +146,13 @@
             if(key === 'chairman') document.getElementById('btn-chairman').classList.add('selected');
             if(key === 'gm') document.getElementById('btn-gm').classList.add('selected');
 
+            // 自動填入姓名
             const nameInput = document.getElementById('name');
             nameInput.value = nameText;
+
+            // [新增] 自動填入祝福語
+            const msgInput = document.getElementById('msg');
+            msgInput.value = msgText;
             
             // 啟用按鈕
             document.getElementById('sendBtn').disabled = false;
@@ -155,13 +166,12 @@
             const msg = document.getElementById('msg').value;
             const btn = document.getElementById('sendBtn');
 
-            // === [關鍵] VIP 專屬 Payload ===
-            // 帶有 isVip: true 和 vipRole 標記
+            // VIP Payload
             const payload = JSON.stringify({ 
                 name: name, 
                 msg: msg, 
-                isVip: true,           // 讓 Display 識別這是 VIP
-                vipRole: selectedRoleKey // 讓 Display 知道是哪位長官 (chairman/gm)
+                isVip: true,           
+                vipRole: selectedRoleKey 
             });
             
             try {
