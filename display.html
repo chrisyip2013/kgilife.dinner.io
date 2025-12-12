@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>凱基永續．共築願景 (Display 最終覺醒版)</title>
+    <title>凱基永續．共築願景</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         :root {
@@ -30,13 +30,14 @@
             height: 100vh; overflow: hidden;
         }
 
-        /* === 全螢幕白光閃爍 (VIP專用) === */
+        /* === 全螢幕白光閃爍 (VIP & 覺醒專用) === */
         #vip-flash-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; opacity: 0; pointer-events: none; z-index: 9999;
             transition: opacity 0.1s;
         }
         .flash-active { opacity: 0.8 !important; }
+        .flash-soft { opacity: 0.3 !important; transition: opacity 1s !important; }
 
         /* === 全螢幕震動 === */
         .screen-shake {
@@ -79,57 +80,79 @@
             overflow: hidden; 
         }
 
-        /* === [修改] 標題與標語基礎樣式 === */
+        /* === [調整] 標題：預設狀態 (較暗，位置上移避開星星) === */
         .title {
-            position: absolute; top: 15px; width: 100%; text-align: center;
-            font-size: 3.8rem; color: #ffffff;
-            text-shadow: 0 0 10px #00ffff, 0 0 30px var(--kgi-blue), 0 0 70px var(--kgi-blue);
+            position: absolute; 
+            top: 3vh; /* 上移至 3% 高度 */
+            width: 100%; text-align: center;
+            font-size: 3.5rem; 
+            color: rgba(255, 255, 255, 0.3); /* 初始半透明 */
+            text-shadow: 0 0 10px rgba(0, 71, 157, 0.5); /* 微弱藍光 */
             letter-spacing: 12px; font-weight: 900; z-index: 20;
-            transition: all 1s ease-out; /* 為變身做準備 */
+            transition: all 1s ease-out; 
+            transform: scale(0.9); /* 初始稍微縮小 */
         }
         
+        /* === [調整] 標語：預設狀態 (較暗) === */
         .slogan {
-            position: absolute; bottom: 25px; width: 100%; text-align: center;
-            font-size: 2.5rem; font-weight: bold; z-index: 20;
-            color: #ffffff; text-shadow: 0 0 20px var(--kgi-orange);
+            position: absolute; bottom: 3vh; width: 100%; text-align: center;
+            font-size: 2.2rem; font-weight: bold; z-index: 20;
+            color: rgba(255, 255, 255, 0.3);
+            text-shadow: none;
             opacity: 0; transition: opacity 1s; pointer-events: none;
         }
 
-        /* === [新增] 文字終極覺醒特效 (Super Cool Text) === */
-        .text-awakening {
-            /* 黃金流光文字 */
-            background: linear-gradient(90deg, #ffd700, #ffffff, #ffaa00, #ffd700);
+        /* === [新增] 終極覺醒特效：流動金屬 (Cinematic Liquid Gold) === */
+        .cinematic-gold {
+            opacity: 1 !important;
+            transform: scale(1.1) !important; /* 放大 */
+            color: transparent !important; /* 文字透明，顯示背景 */
+            
+            /* 黃金流動漸層 */
+            background: linear-gradient(
+                110deg, 
+                #b8860b 10%, 
+                #ffd700 30%, 
+                #ffffff 50%, 
+                #ffd700 70%, 
+                #b8860b 90%
+            );
             background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
             
-            /* 強力光暈 */
-            filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 30px #ff8c00);
+            /* 強力光暈與陰影 */
+            filter: drop-shadow(0 0 5px #ffd700) drop-shadow(0 0 20px #ff8c00) drop-shadow(0 5px 15px black);
             
-            /* 動畫組合：流光 + 彈跳 + 放大 */
-            animation: textShine 3s linear infinite, textPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+            /* 動畫 */
+            animation: 
+                cinematicEntrance 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+                liquidFlow 3s linear infinite !important;
         }
 
-        @keyframes textShine {
-            to { background-position: 200% center; }
-        }
-        @keyframes textPop {
-            0% { transform: scale(0.5); opacity: 0; letter-spacing: 50px; filter: blur(20px); }
-            50% { transform: scale(1.1); opacity: 1; letter-spacing: 10px; filter: blur(0px); }
-            100% { transform: scale(1); opacity: 1; letter-spacing: 15px; } /* 最終字距稍微拉開 */
+        @keyframes cinematicEntrance {
+            0% { transform: scale(3) translateY(-50px); opacity: 0; letter-spacing: 50px; filter: blur(20px); }
+            100% { transform: scale(1.1) translateY(0); opacity: 1; letter-spacing: 12px; filter: blur(0); }
         }
 
-        /* 標語的覺醒 (稍微延遲) */
-        .slogan.text-awakening {
-            animation: textShine 3s linear infinite, textPop 0.8s 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
-            font-size: 3rem; /* 標語變大 */
+        @keyframes liquidFlow {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
-
+        /* === [調整] 大樓容器：下移以避開標題 === */
         .building-wrapper {
             position: relative; padding: 0; border: none; box-shadow: none; z-index: 10;
-            transform: rotateX(15deg) translateY(-10px); transform-style: preserve-3d;
+            /* 增加 translateY 到 20px，讓星星不會撞到標題 */
+            transform: rotateX(15deg) translateY(20px); 
+            transform-style: preserve-3d;
             display: flex; justify-content: center; align-items: center;
+            transition: transform 2s ease-in-out; /* 覺醒時可以緩慢移動 */
+        }
+        /* 覺醒時大樓稍微後退變暗，凸顯文字 */
+        .building-dimmed {
+            filter: brightness(0.7);
+            transform: rotateX(15deg) translateY(20px) translateZ(-50px) !important;
         }
 
         .building-grid { display: grid; gap: 0.5vh; margin: 0 auto; }
@@ -151,7 +174,7 @@
         }
         .spacer { width: var(--grid-size); height: var(--grid-size); background: transparent; pointer-events: none; }
 
-        /* === VIP 星星 (升級版) === */
+        /* === VIP 星星 (質感升級) === */
         .piece.vip-star {
             background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -166,30 +189,18 @@
             border-width: 0 !important;
         }
 
-        /* === [修改] VIP 星星激活狀態：生命呼吸版 (Breathing) === */
+        /* === VIP 星星激活 (生命呼吸版) === */
         .piece.vip-star.active {
             background: radial-gradient(circle, #fff, #ffd700, #ff8c00) !important;
-            /* 基礎光暈 */
             filter: drop-shadow(0 0 10px #ffd700);
             z-index: 300; 
-            /* 3D 浮起 + 呼吸動畫 (不再旋轉) */
+            /* 呼吸動畫 */
             animation: starBreath 3s infinite ease-in-out !important;
         }
-        
         @keyframes starBreath {
-            0% { 
-                transform: scale(2.0) translateZ(20vh) translateY(-2vh); 
-                filter: drop-shadow(0 0 15px #ffd700); 
-            }
-            50% { 
-                /* 變大，光暈變強 */
-                transform: scale(2.3) translateZ(25vh) translateY(-2vh); 
-                filter: drop-shadow(0 0 40px #ffd700) drop-shadow(0 0 60px #fff); 
-            }
-            100% { 
-                transform: scale(2.0) translateZ(20vh) translateY(-2vh); 
-                filter: drop-shadow(0 0 15px #ffd700); 
-            }
+            0% { transform: scale(2.0) translateZ(20vh) translateY(-2vh); filter: drop-shadow(0 0 15px #ffd700); }
+            50% { transform: scale(2.3) translateZ(25vh) translateY(-2vh); filter: drop-shadow(0 0 40px #ffd700) drop-shadow(0 0 60px #fff); }
+            100% { transform: scale(2.0) translateZ(20vh) translateY(-2vh); filter: drop-shadow(0 0 15px #ffd700); }
         }
 
         /* Logo 顏色 */
@@ -199,7 +210,7 @@
         .c-white { background: var(--kgi-white) !important; box-shadow: 0 0 30px #ffffff; }
 
         /* 特殊漸層 */
-        .split-diag-orange-blue { background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
+        .split-diag-orange-blue { background: linear-gradient(45deg, var(--kgi-blue) 50%, var(--kgi-orange) 50%) !important; box-shadow: 0 0 30px var(--kgi-orange); }
         .split-diag-white-blue { background: linear-gradient(135deg, var(--kgi-white) 50%, var(--kgi-blue) 50%) !important; box-shadow: 0 0 30px var(--kgi-blue); }
         .split-blue-orange-diag { background: linear-gradient(135deg, var(--kgi-blue) 48%, var(--kgi-orange) 52%) !important; }
         .split-blue-green-diag { background: linear-gradient(45deg, var(--kgi-blue) 48%, var(--kgi-green) 52%) !important; }
@@ -295,7 +306,7 @@
             <div class="status-light"><div class="dot" id="statusDot"></div><span id="statusText">連線系統初始化...</span></div>
             <div class="title" id="mainTitle">凱基永續．共築願景</div>
             
-            <div class="building-wrapper">
+            <div class="building-wrapper" id="buildingWrapper">
                 <div class="building-grid" id="building"></div>
             </div>
 
@@ -530,15 +541,24 @@
             }
         }
 
-        // [新增] 觸發文字終極覺醒
+        // [新增] 文字覺醒函數 (Liquid Gold Effect)
         function triggerTextAwakening() {
             const title = document.getElementById('mainTitle');
             const slogan = document.getElementById('finalSlogan');
+            const buildingWrap = document.getElementById('buildingWrapper');
             
-            // 加入覺醒動畫 class
-            title.classList.add('text-awakening');
-            slogan.classList.add('text-awakening');
-            slogan.style.opacity = 1; // 確保標語顯示
+            // 觸發柔和白光閃爍
+            const overlay = document.getElementById('vip-flash-overlay');
+            overlay.classList.add('flash-soft');
+            setTimeout(() => overlay.classList.remove('flash-soft'), 1000);
+
+            // 大樓稍微變暗，凸顯文字
+            buildingWrap.classList.add('building-dimmed');
+
+            // 文字變身
+            title.classList.add('cinematic-gold');
+            slogan.classList.add('cinematic-gold');
+            slogan.style.opacity = 1; 
         }
 
         function addToSidebar(name, msg) {
@@ -590,9 +610,9 @@
                 if (data.vipRole === 'chairman') vipStatus.chairman = true;
                 if (data.vipRole === 'gm') vipStatus.gm = true;
                 
-                // [修改] 如果兩位 VIP 都觸發了，執行文字覺醒 + 下載
+                // 兩位長官都發言後，觸發覺醒 + 下載
                 if (vipStatus.chairman && vipStatus.gm) {
-                    triggerTextAwakening(); // 觸發文字特效
+                    triggerTextAwakening(); 
                     if (!hasAutoDownloaded) {
                         setTimeout(() => { exportToCSV(); hasAutoDownloaded = true; }, 3000);
                     }
@@ -686,8 +706,7 @@
                     }, 600);
                 }, (i % 9) * 60 + (Math.floor(i / 9) * 30));
             });
-             document.querySelector('.title').style.animation = 'none';
-             document.querySelector('.title').style.textShadow = '0 0 50px var(--kgi-orange), 0 0 100px var(--kgi-orange)';
+             // 注意：因為有新的文字覺醒特效，這裡不再重複變更文字樣式
         }
 
         const broker = "broker.emqx.io"; const port = 8084; const topic = "kgi_event_2025_live_demo";
