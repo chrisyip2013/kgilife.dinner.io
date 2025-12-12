@@ -722,9 +722,10 @@
         };
         
         function connectMQTT() {
-            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒 (${totalPieces}格)`; client.subscribe(topic); }, onFailure: function () {} });
+            client.connect({ useSSL: true, onSuccess: function () { document.getElementById('statusDot').classList.add('online'); document.getElementById('statusText').innerText = `系統連線就緒`; client.subscribe(topic); }, onFailure: function () {} });
         }
         initBuilding(); connectMQTT();
     </script>
 </body>
 </html>
+
